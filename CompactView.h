@@ -60,6 +60,24 @@ public:
 			void				SetRecords(
 										const std::vector<const TagRecord*>& records);
 
+	// Whether the Duration and Format rows are shown (both on by default).
+	// Hiding them leaves more room for the text that matters; with several
+	// files selected Duration is never shown, and Format only if they share it.
+			void				SetShowDuration(bool show);
+			void				SetShowFormat(bool show);
+
+	// How wide the tag square is compared to the (square) cover art, 1.0 to
+	// 2.0; the default is 1.0, two equal squares. A wider tag square gives
+	// long values more room before they wrap.
+			void				SetInfoWidthRatio(float ratio);
+			float				InfoWidthRatio() const
+									{ return fInfoWidthRatio; }
+
+	// The smallest size the view asks its layout for. The default is
+	// 300 x 150; the least accepted is 100 x 60. Text shrinks to fit, down
+	// to a lower limit, so very small sizes cut values off.
+			void				SetMinimumViewSize(float width, float height);
+
 	// Takes ownership of bitmap (NULL shows the blue gradient), freeing
 	// whatever was shown before.
 			void				SetCoverBitmap(BBitmap* bitmap);
@@ -107,6 +125,7 @@ private:
 			BMessage*			fCoverContextMessage;
 			BString				fFileName;
 			float				fTextScale;
+			float				fInfoWidthRatio;
 };
 
 } // namespace tagkit

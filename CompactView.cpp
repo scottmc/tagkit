@@ -43,8 +43,16 @@ const float kMinTextScale = 0.5f;
 const float kMaxTextScale = 2.0f;
 
 // Smallest the view will be asked to shrink to.
-const float kMinWidth = 300.0f;
-const float kMinHeight = 150.0f;
+const float kDefaultMinWidth = 300.0f;
+const float kDefaultMinHeight = 150.0f;
+
+// The least SetMinimumViewSize() accepts; below this nothing is legible.
+const float kLowestMinWidth = 100.0f;
+const float kLowestMinHeight = 60.0f;
+
+// Limits for SetInfoWidthRatio().
+const float kMinInfoRatio = 1.0f;
+const float kMaxInfoRatio = 2.0f;
 
 // Shown in place of a field's value when the files of a multiple selection
 // don't all have the same one.
@@ -133,6 +141,8 @@ public:
 		:
 		BView("compactInfoSquare", B_WILL_DRAW | B_FULL_UPDATE_ON_RESIZE),
 		fOwner(owner),
+		fShowDuration(true),
+		fShowFormat(true),
 		fTextScale(1.0f)
 	{
 		SetViewColor(B_TRANSPARENT_COLOR);
@@ -148,66 +158,34 @@ public:
 
 	void SetRecord(const TagRecord* record)
 	{
-		fRows.clear();
-
-		if (record != NULL) {
-			_AddRow("Artist:", record->artist, TAG_FIELD_ARTIST);
-			_AddRow("Title:", record->title, TAG_FIELD_TITLE);
-			_AddRow("Album:", record->album, TAG_FIELD_ALBUM);
-			_AddRow("Track:", FormatPositive(record->track), TAG_FIELD_TRACK);
-			_AddRow("Year:", FormatPositive(record->year), TAG_FIELD_YEAR);
-			_AddRow("Genre:", record->genre, TAG_FIELD_GENRE);
-			_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
-			_AddRow("Duration:", FormatDuration(record->durationSeconds), -1);
-			_AddRow("Format:", BString(format_label(record->format)), -1);
-		}
-
-		Invalidate();
+		fRecords.clear();
+		if (record != NULL)
+			fRecords.push_back(*record);
+		_Rebuild();
 	}
 
 	void SetRecords(const std::vector<const TagRecord*>& records)
 	{
-		if (records.size() == 1) {
-			SetRecord(records[0]);
-			return;
+		fRecords.clear();
+		for (size_t i = 0; i < records.size(); i++)
+			fRecords.push_back(*records[i]);
+		_Rebuild();
+	}
+
+	void SetShowDuration(bool show)
+	{
+		if (show != fShowDuration) {
+			fShowDuration = show;
+			_Rebuild();
 		}
+	}
 
-		fRows.clear();
-
-		if (!records.empty()) {
-			// Every editable field, with what the files share or "(multiple)".
-			static const tag_field kFields[] = {
-				TAG_FIELD_ARTIST, TAG_FIELD_TITLE, TAG_FIELD_ALBUM,
-				TAG_FIELD_TRACK, TAG_FIELD_YEAR, TAG_FIELD_GENRE,
-				TAG_FIELD_COMMENT
-			};
-			for (size_t i = 0; i < sizeof(kFields) / sizeof(kFields[0]); i++) {
-				bool mixed = false;
-				BString value = common_tag_field_value(records, kFields[i],
-					&mixed);
-
-				BString label(tag_field_label(kFields[i]));
-				label << ":";
-				_AddRow(label.String(), mixed ? BString(kMixedValue) : value,
-					kFields[i]);
-			}
-
-			// Duration is different for nearly every file; Format is worth
-			// showing when it's the same for all of them.
-			bool sameFormat = true;
-			for (size_t i = 1; i < records.size(); i++) {
-				if (records[i]->format != records[0]->format) {
-					sameFormat = false;
-					break;
-				}
-			}
-			if (sameFormat) {
-				_AddRow("Format:", BString(format_label(records[0]->format)),
-					-1);
-			}
+	void SetShowFormat(bool show)
+	{
+		if (show != fShowFormat) {
+			fShowFormat = show;
+			_Rebuild();
 		}
-
-		Invalidate();
 	}
 
 	virtual void MouseDown(BPoint where)
@@ -296,6 +274,68 @@ public:
 	}
 
 private:
+	// Makes the rows from the records last given, for how many there are
+	// and which optional rows are wanted.
+	void _Rebuild()
+	{
+		fRows.clear();
+
+		if (fRecords.size() == 1) {
+			const TagRecord* record = &fRecords[0];
+			_AddRow("Artist:", record->artist, TAG_FIELD_ARTIST);
+			_AddRow("Title:", record->title, TAG_FIELD_TITLE);
+			_AddRow("Album:", record->album, TAG_FIELD_ALBUM);
+			_AddRow("Track:", FormatPositive(record->track), TAG_FIELD_TRACK);
+			_AddRow("Year:", FormatPositive(record->year), TAG_FIELD_YEAR);
+			_AddRow("Genre:", record->genre, TAG_FIELD_GENRE);
+			_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
+			if (fShowDuration) {
+				_AddRow("Duration:", FormatDuration(record->durationSeconds),
+					-1);
+			}
+			if (fShowFormat) {
+				_AddRow("Format:", BString(format_label(record->format)), -1);
+			}
+		} else if (fRecords.size() > 1) {
+			std::vector<const TagRecord*> pointers;
+			for (size_t i = 0; i < fRecords.size(); i++)
+				pointers.push_back(&fRecords[i]);
+
+			// Every editable field, with what the files share or "(multiple)".
+			static const tag_field kFields[] = {
+				TAG_FIELD_ARTIST, TAG_FIELD_TITLE, TAG_FIELD_ALBUM,
+				TAG_FIELD_TRACK, TAG_FIELD_YEAR, TAG_FIELD_GENRE,
+				TAG_FIELD_COMMENT
+			};
+			for (size_t i = 0; i < sizeof(kFields) / sizeof(kFields[0]); i++) {
+				bool mixed = false;
+				BString value = common_tag_field_value(pointers, kFields[i],
+					&mixed);
+
+				BString label(tag_field_label(kFields[i]));
+				label << ":";
+				_AddRow(label.String(), mixed ? BString(kMixedValue) : value,
+					kFields[i]);
+			}
+
+			// Duration is different for nearly every file; Format is worth
+			// showing when it's the same for all of them.
+			bool sameFormat = true;
+			for (size_t i = 1; i < fRecords.size(); i++) {
+				if (fRecords[i].format != fRecords[0].format) {
+					sameFormat = false;
+					break;
+				}
+			}
+			if (sameFormat && fShowFormat) {
+				_AddRow("Format:", BString(format_label(fRecords[0].format)),
+					-1);
+			}
+		}
+
+		Invalidate();
+	}
+
 	void _AddRow(const char* label, const BString& value, int32 field)
 	{
 		InfoRow row;
@@ -393,6 +433,9 @@ private:
 
 	CompactView*			fOwner;
 	std::vector<InfoRow>	fRows;
+	std::vector<TagRecord>	fRecords;
+	bool					fShowDuration;
+	bool					fShowFormat;
 	float					fTextScale;
 };
 
@@ -519,14 +562,15 @@ CompactView::CompactView(const char* name)
 	fArtSquare(new CompactArtSquare(this)),
 	fEditMessage(NULL),
 	fCoverContextMessage(NULL),
-	fTextScale(1.0f)
+	fTextScale(1.0f),
+	fInfoWidthRatio(1.0f)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
 
 	AddChild(fInfoSquare);
 	AddChild(fArtSquare);
 
-	SetExplicitMinSize(BSize(kMinWidth, kMinHeight));
+	SetExplicitMinSize(BSize(kDefaultMinWidth, kDefaultMinHeight));
 }
 
 
@@ -583,6 +627,46 @@ CompactView::SetTextScale(float scale)
 
 	fTextScale = scale;
 	fInfoSquare->SetTextScale(scale);
+}
+
+
+void
+CompactView::SetShowDuration(bool show)
+{
+	fInfoSquare->SetShowDuration(show);
+}
+
+
+void
+CompactView::SetShowFormat(bool show)
+{
+	fInfoSquare->SetShowFormat(show);
+}
+
+
+void
+CompactView::SetInfoWidthRatio(float ratio)
+{
+	if (ratio < kMinInfoRatio)
+		ratio = kMinInfoRatio;
+	if (ratio > kMaxInfoRatio)
+		ratio = kMaxInfoRatio;
+	if (ratio == fInfoWidthRatio)
+		return;
+
+	fInfoWidthRatio = ratio;
+	_LayoutSquares();
+}
+
+
+void
+CompactView::SetMinimumViewSize(float width, float height)
+{
+	if (width < kLowestMinWidth)
+		width = kLowestMinWidth;
+	if (height < kLowestMinHeight)
+		height = kLowestMinHeight;
+	SetExplicitMinSize(BSize(width, height));
 }
 
 
@@ -716,17 +800,21 @@ CompactView::_LayoutSquares()
 	// Leave a strip under the squares for the file name.
 	innerHeight -= _FileNameStripHeight();
 
-	float side = floorf(fminf(innerHeight, (innerWidth - kSquareGap) / 2.0f));
+	// The art square is side x side; the info square is fInfoWidthRatio
+	// times as wide (1: the same, a square).
+	float side = floorf(fminf(innerHeight,
+		(innerWidth - kSquareGap) / (1.0f + fInfoWidthRatio)));
 	if (side < 1.0f)
 		side = 1.0f;
+	float infoWidth = floorf(side * fInfoWidthRatio);
 
-	float totalWidth = (2 * side) + kSquareGap;
+	float totalWidth = infoWidth + side + kSquareGap;
 	float left = floorf(inner.left + (innerWidth - totalWidth) / 2.0f);
 	float top = floorf(inner.top + (innerHeight - side) / 2.0f);
 
 	fInfoSquare->MoveTo(left, top);
-	fInfoSquare->ResizeTo(side - 1.0f, side - 1.0f);
-	fArtSquare->MoveTo(left + side + kSquareGap, top);
+	fInfoSquare->ResizeTo(infoWidth - 1.0f, side - 1.0f);
+	fArtSquare->MoveTo(left + infoWidth + kSquareGap, top);
 	fArtSquare->ResizeTo(side - 1.0f, side - 1.0f);
 	Invalidate();
 }
