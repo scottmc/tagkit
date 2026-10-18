@@ -28,6 +28,7 @@ the window, with details added; the window decides what to do.</p>
 <h2>Member Functions</h2>
 <table>
 <tr><td><a href="#CompactView_ctor"><code>CompactView(const char* name)</code></a><br>Creates the view.</td></tr>
+<tr><td><a href="#SetRecords"><code>void SetRecords(const std::vector&lt;const TagRecord*&gt;&amp; records)</code></a><br>Shows several records at once, for a multiple selection.</td></tr>
 <tr><td><a href="#SetRecord"><code>void SetRecord(const TagRecord* record)</code></a><br>Shows a record's tag fields.</td></tr>
 <tr><td><a href="#SetCoverBitmap"><code>void SetCoverBitmap(BBitmap* bitmap)</code></a><br>Sets the cover art shown.</td></tr>
 <tr><td><a href="#SetTextScale"><code>void SetTextScale(float scale)</code></a><br>Makes the text larger or smaller than its automatic size.</td></tr>
@@ -40,6 +41,13 @@ the window, with details added; the window decides what to do.</p>
 <h2>Documentation</h2>
 <div class="member"><h3 id="CompactView_ctor"><code>CompactView(const char* name)</code></h3>
 <p class="brief">Creates the view.</p>
+</div>
+<div class="member"><h3 id="SetRecords"><code>void SetRecords(const std::vector&lt;const TagRecord*&gt;&amp; records)</code></h3>
+<p class="brief">Shows several records at once, for a multiple selection.</p>
+<p>Each field shows the value all the records share, or &ldquo;(multiple)&rdquo; where they differ. Duration is left out, and Format is shown only when every record has the same one. &ldquo;N files selected&rdquo; replaces the file name. One record is shown as <a href="#SetRecord">SetRecord()</a> would show it; none shows the empty state. Right-clicking a row still posts the edit message; the app decides what to do with it for each file.</p>
+<h4>Parameters</h4><dl>
+<dt><code>records</code></dt><dd>The records (copied).</dd>
+</dl>
 </div>
 <div class="member"><h3 id="SetRecord"><code>void SetRecord(const TagRecord* record)</code></h3>
 <p class="brief">Shows a record's tag fields.</p>
@@ -70,7 +78,7 @@ the window, with details added; the window decides what to do.</p>
 </div>
 <div class="member"><h3 id="SetEditMessage"><code>void SetEditMessage(BMessage* message)</code></h3>
 <p class="brief">Sets the message posted when a tag row is right-clicked.</p>
-<p>Posted for the Artist, Title, Album, Track, Year or Genre row. The copy carries <code>"field"</code> (int32, a <a href="TagField.html#tag_field">tag_field</a>), <code>"where"</code> (BPoint, the screen position) and <code>"width"</code> (float, the tag square's width). The view takes ownership.</p>
+<p>Posted for the Artist, Title, Album, Track, Year, Genre or Comment row. The copy carries <code>"field"</code> (int32, a <a href="TagField.html#tag_field">tag_field</a>), <code>"where"</code> (BPoint, the screen position) and <code>"width"</code> (float, the tag square's width). The view takes ownership.</p>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>

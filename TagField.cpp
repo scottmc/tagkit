@@ -48,6 +48,7 @@ tag_field_label(tag_field field)
 		case TAG_FIELD_TRACK:	return "Track";
 		case TAG_FIELD_YEAR:	return "Year";
 		case TAG_FIELD_GENRE:	return "Genre";
+		case TAG_FIELD_COMMENT:	return "Comment";
 		default:				return "";
 	}
 }
@@ -62,6 +63,7 @@ tag_field_value(const TagRecord& record, tag_field field)
 		case TAG_FIELD_TITLE:	text = record.title; break;
 		case TAG_FIELD_ALBUM:	text = record.album; break;
 		case TAG_FIELD_GENRE:	text = record.genre; break;
+		case TAG_FIELD_COMMENT:	text = record.comment; break;
 		case TAG_FIELD_TRACK:
 			if (record.track > 0)
 				text << record.track;
@@ -89,6 +91,7 @@ set_tag_field_value(TagRecord& record, tag_field field, const BString& text)
 		case TAG_FIELD_TITLE:	record.title = trimmed; return true;
 		case TAG_FIELD_ALBUM:	record.album = trimmed; return true;
 		case TAG_FIELD_GENRE:	record.genre = trimmed; return true;
+		case TAG_FIELD_COMMENT:	record.comment = trimmed; return true;
 		case TAG_FIELD_TRACK:
 			if (!ParseOptionalNumber(trimmed, number))
 				return false;
@@ -102,6 +105,27 @@ set_tag_field_value(TagRecord& record, tag_field field, const BString& text)
 		default:
 			return false;
 	}
+}
+
+
+BString
+common_tag_field_value(const std::vector<const TagRecord*>& records,
+	tag_field field, bool* mixed)
+{
+	if (mixed != NULL)
+		*mixed = false;
+	if (records.empty())
+		return BString();
+
+	BString first = tag_field_value(*records[0], field);
+	for (size_t i = 1; i < records.size(); i++) {
+		if (tag_field_value(*records[i], field) != first) {
+			if (mixed != NULL)
+				*mixed = true;
+			return BString();
+		}
+	}
+	return first;
 }
 
 

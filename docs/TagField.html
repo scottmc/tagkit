@@ -10,12 +10,12 @@
 <div id="top"><a href="index.html">TagKit</a> &raquo; Data model &raquo; TagField</div>
 <div id="content">
 <h1>TagField</h1>
-<p class="brief">Names the six hand-editable tag fields and converts them to and from text.</p>
+<p class="brief">Names the seven hand-editable tag fields and converts them to and from text.</p>
 <pre>#include "tagkit/TagField.h"</pre>
 <h2>Detailed Description</h2>
 <p>The column list, the compact view and whatever edits a value all use
 these helpers, so they agree on what, for example, &ldquo;Track&rdquo; means.
-The editable fields are Artist, Title, Album, Track, Year and Genre.</p>
+The editable fields are Artist, Title, Album, Track, Year, Genre and Comment.</p>
 <div class="figure"><img src="images/edit-track-popup.png" alt="Right-clicking a field of a CompactView opens a small window to edit it. The field&#x27;s name comes from tag_field_label(), and the text is stored with set_tag_field_value()."><p class="caption">Right-clicking a field of a CompactView opens a small window to edit it. The field's name comes from tag_field_label(), and the text is stored with set_tag_field_value().</p></div>
 <h2>Enumerations</h2>
 <table>
@@ -25,6 +25,7 @@ The editable fields are Artist, Title, Album, Track, Year and Genre.</p>
 <table>
 <tr><td><a href="#tag_field_label"><code>const char* tag_field_label(tag_field field)</code></a><br>The field's name as shown to the user.</td></tr>
 <tr><td><a href="#tag_field_value"><code>BString tag_field_value(const TagRecord&amp; record, tag_field field)</code></a><br>The field's value as text.</td></tr>
+<tr><td><a href="#common_tag_field_value"><code>BString common_tag_field_value(const std::vector&lt;const TagRecord*&gt;&amp; records, tag_field field, bool* mixed)</code></a><br>The value a field has in common across several records.</td></tr>
 <tr><td><a href="#set_tag_field_value"><code>bool set_tag_field_value(TagRecord&amp; record, tag_field field, const BString&amp; text)</code></a><br>Stores edited text into a field.</td></tr>
 </table>
 <h2>Documentation</h2>
@@ -37,6 +38,7 @@ The editable fields are Artist, Title, Album, Track, Year and Genre.</p>
 <tr><td><code>TAG_FIELD_TRACK</code></td><td>Track</td></tr>
 <tr><td><code>TAG_FIELD_YEAR</code></td><td>Year</td></tr>
 <tr><td><code>TAG_FIELD_GENRE</code></td><td>Genre</td></tr>
+<tr><td><code>TAG_FIELD_COMMENT</code></td><td>Comment</td></tr>
 <tr><td><code>TAG_FIELD_COUNT</code></td><td>The number of fields (not a field).</td></tr></table>
 </div>
 <div class="member"><h3 id="tag_field_label"><code>const char* tag_field_label(tag_field field)</code></h3>
@@ -65,6 +67,16 @@ The editable fields are Artist, Title, Album, Track, Year and Genre.</p>
 <dt><code>text</code></dt><dd>The new text.</dd>
 </dl>
 <h4>Returns</h4><p class="param"><code>true</code> on success. For anything not acceptable it returns <code>false</code> and leaves the record alone.</p>
+</div>
+<div class="member"><h3 id="common_tag_field_value"><code>BString common_tag_field_value(const std::vector&lt;const TagRecord*&gt;&amp; records, tag_field field, bool* mixed)</code></h3>
+<p class="brief">The value a field has in common across several records.</p>
+<p>Used to show a multiple selection: the value when every record has the same one, otherwise blank. An empty list gives blank, not mixed.</p>
+<h4>Parameters</h4><dl>
+<dt><code>records</code></dt><dd>The records to compare.</dd>
+<dt><code>field</code></dt><dd>The field.</dd>
+<dt><code>mixed</code></dt><dd>If not <code>NULL</code>, set to <code>true</code> when the values differ.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The shared text, or blank.</p>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>

@@ -17,6 +17,8 @@
 #ifndef TAGKIT_TAG_FIELD_H
 #define TAGKIT_TAG_FIELD_H
 
+#include <vector>
+
 #include <String.h>
 #include <SupportDefs.h>
 
@@ -32,6 +34,7 @@ enum tag_field {
 	TAG_FIELD_TRACK,
 	TAG_FIELD_YEAR,
 	TAG_FIELD_GENRE,
+	TAG_FIELD_COMMENT,
 
 	TAG_FIELD_COUNT
 };
@@ -49,6 +52,14 @@ BString tag_field_value(const TagRecord& record, tag_field field);
 // anything else returns false and leaves the record alone.
 bool set_tag_field_value(TagRecord& record, tag_field field,
 	const BString& text);
+
+// The value a field has in common across several records: the text itself
+// when every record has the same (compared exactly) value, in which case
+// *mixed is set to false. When the values differ the result is blank and
+// *mixed is set to true. No records at all gives blank, not mixed. Meant for
+// showing and editing the fields of a multiple selection; mixed may be NULL.
+BString common_tag_field_value(const std::vector<const TagRecord*>& records,
+	tag_field field, bool* mixed = NULL);
 
 } // namespace tagkit
 

@@ -21,6 +21,8 @@
 #ifndef TAGKIT_COMPACT_VIEW_H
 #define TAGKIT_COMPACT_VIEW_H
 
+#include <vector>
+
 #include <String.h>
 #include <View.h>
 
@@ -48,6 +50,16 @@ public:
 	// call); NULL shows an empty "no file selected" state.
 			void				SetRecord(const TagRecord* record);
 
+	// Shows several files at once, for a multiple selection. Each field is
+	// shown with the value all the records share, or "(multiple)" where they
+	// differ; Duration (which always differs) is left out, and Format is
+	// shown only when every record has the same one. Under the squares is
+	// "N files selected" instead of a file name. The records are copied.
+	// One record is shown just as SetRecord() would show it, and none as the
+	// empty "no file selected" state.
+			void				SetRecords(
+										const std::vector<const TagRecord*>& records);
+
 	// Takes ownership of bitmap (NULL shows the blue gradient), freeing
 	// whatever was shown before.
 			void				SetCoverBitmap(BBitmap* bitmap);
@@ -73,7 +85,7 @@ public:
 			void				SetCoverContextMessage(BMessage* message);
 
 	// Posted to Window() when the user right-clicks the Artist, Title,
-	// Album, Track, Year or Genre row. The posted copy carries "field" (a
+	// Album, Track, Year, Genre or Comment row. The posted copy carries "field" (a
 	// tag_field, int32), "where" (the pointer's screen position, a BPoint)
 	// and "width" (the tag square's width, a float), so whatever edits the
 	// field can open at the row. The view takes ownership of the message.

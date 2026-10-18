@@ -46,6 +46,10 @@ const float kMaxTextScale = 2.0f;
 const float kMinWidth = 300.0f;
 const float kMinHeight = 150.0f;
 
+// Shown in place of a field's value when the files of a multiple selection
+// don't all have the same one.
+const char* const kMixedValue = "(multiple)";
+
 
 struct InfoRow {
 	BString	label;
@@ -153,8 +157,54 @@ public:
 			_AddRow("Track:", FormatPositive(record->track), TAG_FIELD_TRACK);
 			_AddRow("Year:", FormatPositive(record->year), TAG_FIELD_YEAR);
 			_AddRow("Genre:", record->genre, TAG_FIELD_GENRE);
+			_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
 			_AddRow("Duration:", FormatDuration(record->durationSeconds), -1);
 			_AddRow("Format:", BString(format_label(record->format)), -1);
+		}
+
+		Invalidate();
+	}
+
+	void SetRecords(const std::vector<const TagRecord*>& records)
+	{
+		if (records.size() == 1) {
+			SetRecord(records[0]);
+			return;
+		}
+
+		fRows.clear();
+
+		if (!records.empty()) {
+			// Every editable field, with what the files share or "(multiple)".
+			static const tag_field kFields[] = {
+				TAG_FIELD_ARTIST, TAG_FIELD_TITLE, TAG_FIELD_ALBUM,
+				TAG_FIELD_TRACK, TAG_FIELD_YEAR, TAG_FIELD_GENRE,
+				TAG_FIELD_COMMENT
+			};
+			for (size_t i = 0; i < sizeof(kFields) / sizeof(kFields[0]); i++) {
+				bool mixed = false;
+				BString value = common_tag_field_value(records, kFields[i],
+					&mixed);
+
+				BString label(tag_field_label(kFields[i]));
+				label << ":";
+				_AddRow(label.String(), mixed ? BString(kMixedValue) : value,
+					kFields[i]);
+			}
+
+			// Duration is different for nearly every file; Format is worth
+			// showing when it's the same for all of them.
+			bool sameFormat = true;
+			for (size_t i = 1; i < records.size(); i++) {
+				if (records[i]->format != records[0]->format) {
+					sameFormat = false;
+					break;
+				}
+			}
+			if (sameFormat) {
+				_AddRow("Format:", BString(format_label(records[0]->format)),
+					-1);
+			}
 		}
 
 		Invalidate();
@@ -625,6 +675,23 @@ CompactView::SetRecord(const TagRecord* record)
 	fInfoSquare->SetRecord(record);
 
 	fFileName = record != NULL ? record->fileName : BString();
+	Invalidate();
+}
+
+
+void
+CompactView::SetRecords(const std::vector<const TagRecord*>& records)
+{
+	fInfoSquare->SetRecords(records);
+
+	if (records.size() == 1) {
+		fFileName = records[0]->fileName;
+	} else if (records.size() > 1) {
+		fFileName = "";
+		fFileName << (int32)records.size() << " files selected";
+	} else {
+		fFileName = BString();
+	}
 	Invalidate();
 }
 
