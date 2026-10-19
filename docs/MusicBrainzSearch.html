@@ -21,20 +21,21 @@ results.</p>
 <div class="figure"><img src="images/search-dialog.png" alt="TagView&#x27;s Search MusicBrainz dialog, which calls SearchRecording(); leaving the song blank searches for cover art with SearchReleases()."><p class="caption">TagView's Search MusicBrainz dialog, which calls SearchRecording(); leaving the song blank searches for cover art with SearchReleases().</p></div>
 <h2>Class Functions</h2>
 <table>
-<tr><td><a href="#SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1, bool* timedOut = NULL)</code></a><br>Finds recordings by artist and song.</td></tr>
-<tr><td><a href="#SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25, bool* timedOut = NULL)</code></a><br>Finds releases by artist, for cover art without a song.</td></tr>
+<tr><td><a href="#SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1)</code></a><br>Finds recordings by artist and song.</td></tr>
+<tr><td><a href="#SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25)</code></a><br>Finds releases by artist, for cover art without a song.</td></tr>
 </table>
 <h2>Documentation</h2>
-<div class="member"><h3 id="SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1, bool* timedOut = NULL)</code></h3>
+<div class="member"><h3 id="SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1)</code></h3>
 <p class="brief">Finds recordings by artist and song.</p>
 <p>If <code>album</code> is given, only recordings that appear on a
 matching release come back, and that release is the one reported as each
 match's album, year and track (and listed first among its releases for cover
 art). This helps when a plain artist and song search buries the album you are
 after among live versions and compilations.</p>
-<p>The search is given <a href="NetworkTimeout.html">network_timeout()</a>
-seconds. When that runs out the result is empty and <code>timedOut</code> says
-so, so a caller can report "timed out" instead of "no matches".</p>
+<p>libmusicbrainz5 has no way to set a time limit, so these searches are not
+covered by <a href="NetworkTimeout.html">network_timeout()</a>: over a stalled
+connection they wait as long as the library does. (Downloads made through
+<a href="HttpFetch.html">http_get()</a> are limited.)</p>
 <p>Without a <code>targetSeconds</code> (below 0), matches come back in
 MusicBrainz's own relevance order. With one, everything MusicBrainz returned is
 re-sorted by how close its length is to <code>targetSeconds</code> (closest
@@ -47,11 +48,10 @@ the likelier it is the same recording.</p>
 <dt><code>album</code></dt><dd>Optional; pass an empty string to leave it out.</dd>
 <dt><code>maxResults</code></dt><dd>The most matches to return.</dd>
 <dt><code>targetSeconds</code></dt><dd>The file's length, or <code>-1</code> for none.</dd>
-<dt><code>timedOut</code></dt><dd>If not <code>NULL</code>, set to <code>true</code> if the search ran out of time (see <a href="NetworkTimeout.html">NetworkTimeout</a>), otherwise <code>false</code>.</dd>
 </dl>
 <h4>Returns</h4><p class="param">Up to <code>maxResults</code> matches (see <a href="RecordingMatch.html">RecordingMatch</a>); empty if there were none or the lookup failed.</p>
 </div>
-<div class="member"><h3 id="SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25, bool* timedOut = NULL)</code></h3>
+<div class="member"><h3 id="SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25)</code></h3>
 <p class="brief">Finds releases by artist, for cover art without a song.</p>
 <p>Narrowed to titles matching <code>album</code> if one is given. Results
 are in MusicBrainz's relevance order, with repeats of the same title and year
@@ -61,7 +61,6 @@ a wider net than the releases of one recording.</p>
 <dt><code>artist</code></dt><dd>The artist.</dd>
 <dt><code>album</code></dt><dd>Optional; pass an empty string to leave it out.</dd>
 <dt><code>maxResults</code></dt><dd>The most releases to return.</dd>
-<dt><code>timedOut</code></dt><dd>If not <code>NULL</code>, set to <code>true</code> if the search ran out of time, otherwise <code>false</code>.</dd>
 </dl>
 <h4>Returns</h4><p class="param">The releases found; empty if there were none or the lookup failed.</p>
 </div>

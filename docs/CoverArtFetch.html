@@ -13,7 +13,7 @@
 <p class="brief">Finds front covers on the Cover Art Archive.</p>
 <pre>#include "tagkit/CoverArtFetch.h"</pre>
 <h2>Detailed Description</h2>
-<p>Looks up each release's front cover with libcoverart. Both functions
+<p>Looks up each release's front cover on the Cover Art Archive, downloading it with <a href="HttpFetch.html">http_get()</a>. Both functions
 perform network I/O, one request per release, so always call them from a
 worker thread, never the UI thread.</p>
 <p>Releases with no cover art, or whose fetch fails, are skipped: one missing

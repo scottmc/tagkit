@@ -10,8 +10,8 @@
 //
 // Part of "tagkit" -- the reusable pieces of TagView.
 // Looks up front cover art for a set of MusicBrainz releases on the Cover
-// Art Archive (via libcoverart), the same way Hare's MusicBrainzLookup
-// does.
+// Art Archive. The covers are downloaded with http_get() (see HttpFetch.h),
+// so every request has a time limit.
 
 #ifndef TAGKIT_COVER_ART_FETCH_H
 #define TAGKIT_COVER_ART_FETCH_H

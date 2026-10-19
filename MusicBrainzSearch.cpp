@@ -8,11 +8,9 @@
  */
 #include "MusicBrainzSearch.h"
 #include "ClientInfo.h"
-#include "NetworkTimeout.h"
 
 #include <algorithm>
 #include <exception>
-#include <memory>
 #include <stdlib.h>
 
 #include <Debug.h>
@@ -96,8 +94,11 @@ JoinArtistCredit(MusicBrainz5::CArtistCredit* credit)
 }
 
 
+} // namespace
+
+
 std::vector<RecordingMatch>
-SearchRecordingNow(const BString& artist, const BString& song,
+MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
 	const BString& album, int32 maxResults, int32 targetSeconds)
 {
 	std::vector<RecordingMatch> matches;
@@ -248,7 +249,7 @@ SearchRecordingNow(const BString& artist, const BString& song,
 
 
 std::vector<ReleaseRef>
-SearchReleasesNow(const BString& artist, const BString& album,
+MusicBrainzSearch::SearchReleases(const BString& artist, const BString& album,
 	int32 maxResults)
 {
 	std::vector<ReleaseRef> releases;
@@ -309,59 +310,6 @@ SearchReleasesNow(const BString& artist, const BString& album,
 	}
 
 	return releases;
-}
-
-} // namespace
-
-
-std::vector<RecordingMatch>
-MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
-	const BString& album, int32 maxResults, int32 targetSeconds,
-	bool* timedOut)
-{
-	if (timedOut != NULL)
-		*timedOut = false;
-
-	// libmusicbrainz5 has no time limit of its own, so the query runs on a
-	// helper thread (which owns copies of everything it uses) that is
-	// abandoned if it takes too long.
-	std::shared_ptr<std::vector<RecordingMatch> > matches(
-		new std::vector<RecordingMatch>);
-	bool finished = run_with_timeout(network_timeout(),
-		[=]() {
-			*matches = SearchRecordingNow(artist, song, album, maxResults,
-				targetSeconds);
-		});
-	if (!finished) {
-		PRINT(("MusicBrainzSearch: search timed out\n"));
-		if (timedOut != NULL)
-			*timedOut = true;
-		return std::vector<RecordingMatch>();
-	}
-
-	return *matches;
-}
-
-
-std::vector<ReleaseRef>
-MusicBrainzSearch::SearchReleases(const BString& artist, const BString& album,
-	int32 maxResults, bool* timedOut)
-{
-	if (timedOut != NULL)
-		*timedOut = false;
-
-	std::shared_ptr<std::vector<ReleaseRef> > releases(
-		new std::vector<ReleaseRef>);
-	bool finished = run_with_timeout(network_timeout(),
-		[=]() { *releases = SearchReleasesNow(artist, album, maxResults); });
-	if (!finished) {
-		PRINT(("MusicBrainzSearch: release search timed out\n"));
-		if (timedOut != NULL)
-			*timedOut = true;
-		return std::vector<ReleaseRef>();
-	}
-
-	return *releases;
 }
 
 } // namespace tagkit

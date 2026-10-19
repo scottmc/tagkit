@@ -15,11 +15,11 @@ repository (with its history) so other programs, such as Hare, can share it.
 - `TagReader`, `TagWriter`, `TagAttributes` -- read and write tags with
   TagLib; copy tags to Haiku file attributes.
 - `CoverArtImage`, `CoverArtFetch`, `ITunesArtwork`, `HttpFetch` -- cover art
-  kept as its original bytes, found on the Cover Art Archive (libcoverart)
+  kept as its original bytes, found on the Cover Art Archive
   with an iTunes fallback.
 - `MusicBrainzSearch`, `RecordingMatch` -- recording and release search.
-- `NetworkTimeout` -- the time limit (30 s by default, settable) every
-  network request works under, and a helper for limiting library calls.
+- `NetworkTimeout` -- the time limit (30 s by default, settable) that
+  downloads work under (the MusicBrainz search can't be limited).
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
   `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`,
   `CoverArtPickerWindow`, `TagView`, `RecordingMatchView` -- views.
@@ -48,8 +48,8 @@ because the web services want to know which program is calling: define
 
 ## Requirements
 
-Haiku with the TagLib, libmusicbrainz5 and libcoverart development packages
-(`taglib_devel`, `libmusicbrainz5_devel`, `libcoverart_devel`), and `curl` at
+Haiku with the TagLib and libmusicbrainz5 development packages
+(`taglib_devel`, `libmusicbrainz5_devel`), and `curl` at
 run time for the iTunes lookups.
 
 ## License

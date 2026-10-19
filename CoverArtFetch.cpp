@@ -7,31 +7,15 @@
  *		Claude (Anthropic), coding
  */
 #include "CoverArtFetch.h"
-#include "ClientInfo.h"
-#include "NetworkTimeout.h"
+#include "HttpFetch.h"
 
-#include <exception>
-#include <memory>
 #include <stdio.h>
-#include <string>
 
 #include <Debug.h>
-
-#include <coverart/CoverArt.h>
 
 
 
 namespace tagkit {
-
-namespace {
-
-// What the helper thread of one request leaves behind.
-struct FetchResult {
-	std::vector<unsigned char>	data;
-	std::string					error;
-};
-
-} // namespace
 
 
 int32
@@ -47,21 +31,15 @@ fetch_cover_art(const std::vector<ReleaseRef>& releases, int32 maxImages,
 		if (release.id.IsEmpty())
 			continue;
 
-		// libcoverart has no time limit of its own, so the request runs on
-		// a helper thread that is abandoned if it takes too long.
-		std::shared_ptr<FetchResult> result(new FetchResult);
-		BString releaseId(release.id);
-		bool finished = run_with_timeout(network_timeout(), [=]() {
-			try {
-				CoverArtArchive::CCoverArt coverArt(tagkit::user_agent());
-				result->data = coverArt.FetchFront(releaseId.String());
-			} catch (std::exception& ex) {
-				result->error = ex.what();
-				if (result->error.empty())
-					result->error = "failed";
-			}
-		});
-		if (!finished) {
+		// The Cover Art Archive redirects this to the release's front
+		// cover image (and answers 404 when it has none).
+		BString url("https://coverartarchive.org/release/");
+		url << release.id << "/front";
+
+		std::vector<unsigned char> data;
+		BString error;
+		status_t status = http_get(url, data, &error);
+		if (status == B_TIMED_OUT) {
 			fprintf(stderr, "TagView: cover art request for release %s (%s) "
 				"timed out; giving up on the rest\n", release.id.String(),
 				release.title.String());
@@ -69,15 +47,12 @@ fetch_cover_art(const std::vector<ReleaseRef>& releases, int32 maxImages,
 				*timedOut = true;
 			break;
 		}
-		if (!result->error.empty()) {
+		if (status != B_OK) {
 			// Most often just "no cover art for this release" (a 404).
 			fprintf(stderr, "TagView: no cover art for release %s (%s): %s\n",
-				release.id.String(), release.title.String(),
-				result->error.c_str());
+				release.id.String(), release.title.String(), error.String());
 			continue;
 		}
-		std::vector<unsigned char> data;
-		data.swap(result->data);
 
 		if (data.empty()) {
 			fprintf(stderr, "TagView: empty cover art for release %s (%s)\n",

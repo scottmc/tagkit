@@ -33,6 +33,8 @@ public:
 	// vector if there were no matches or the lookup failed for any reason
 	// (network error, malformed response, ...) -- failures are swallowed
 	// rather than thrown, so a failed search just looks like zero results.
+	// Note that libmusicbrainz5 gives no way to set a time limit, so a
+	// search over a stalled connection waits as long as the library does.
 	//
 	// album is optional (pass an empty string to leave it out): when given
 	// it's added to the query so only recordings that appear on a matching
@@ -40,11 +42,6 @@ public:
 	// match's album/year/track (and listed first among its releases for
 	// cover art). Handy when the plain artist + song search buries the
 	// album you're after among live versions and compilations.
-	//
-	// A search is given network_timeout() seconds (NetworkTimeout.h). If it
-	// runs out the result is empty and, if timedOut is given, *timedOut is
-	// set to true -- so a caller can say "timed out" rather than "no
-	// matches". (Also false for every other outcome.)
 	//
 	// Without a targetSeconds (< 0) matches come back in MusicBrainz's own
 	// relevance order. With one, everything MusicBrainz returned is
@@ -54,7 +51,7 @@ public:
 	// closer the length, the likelier it's the same recording.
 	static std::vector<RecordingMatch> SearchRecording(const BString& artist,
 		const BString& song, const BString& album, int32 maxResults = 10,
-		int32 targetSeconds = -1, bool* timedOut = NULL);
+		int32 targetSeconds = -1);
 
 	// For finding cover art without a song: releases by artist, narrowed
 	// to titles matching album if one is given (pass an empty string to
@@ -62,7 +59,7 @@ public:
 	// the same title and year dropped. Same rules as SearchRecording():
 	// network I/O on a worker thread, failures look like an empty result.
 	static std::vector<ReleaseRef> SearchReleases(const BString& artist,
-		const BString& album, int32 maxResults = 25, bool* timedOut = NULL);
+		const BString& album, int32 maxResults = 25);
 };
 
 } // namespace tagkit
