@@ -37,27 +37,6 @@ struct Candidate {
 };
 
 
-BString
-PercentEncode(const BString& text)
-{
-	static const char* hex = "0123456789ABCDEF";
-
-	BString encoded;
-	for (int32 i = 0; i < text.Length(); i++) {
-		unsigned char c = (unsigned char)text.ByteAt(i);
-		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-				|| (c >= '0' && c <= '9') || c == '-' || c == '_'
-				|| c == '.' || c == '~') {
-			encoded << (char)c;
-		} else {
-			char buffer[4] = { '%', hex[c >> 4], hex[c & 15], '\0' };
-			encoded << buffer;
-		}
-	}
-	return encoded;
-}
-
-
 // Apple and MusicBrainz often write ’ where the tags have ', so compare
 // with the curly quotes flattened (case is ignored by IFindFirst).
 BString
@@ -242,7 +221,7 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 
 	BString url("https://itunes.apple.com/search?media=music&entity=album"
 		"&limit=");
-	url << kSearchLimit << "&term=" << PercentEncode(term);
+	url << kSearchLimit << "&term=" << url_encode(term);
 
 	std::vector<unsigned char> response;
 	BString error;

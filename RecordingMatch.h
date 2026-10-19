@@ -10,7 +10,7 @@
 //
 // Part of "tagkit" -- the reusable pieces of TagView.
 // One MusicBrainz recording (track) search result. Deliberately has no
-// dependency on libmusicbrainz5's own types, so callers (and other apps)
+// dependency on any JSON or web code, so callers (and other apps)
 // don't need to include/link against it just to hold or display a
 // search result.
 
@@ -64,11 +64,9 @@ struct RecordingMatch {
 								// appears on (as many as MusicBrainz
 								// listed, capped), in MusicBrainz's order
 	int32	score;			// 0-100 relevance MusicBrainz assigned to
-							// this result, or -1 if unknown/unavailable.
-							// tagkit::MusicBrainzSearch currently always
-							// leaves this at -1 -- see its SearchRecording()
-							// for why -- but matches still come back in
-							// MusicBrainz's own relevance order.
+							// this result, or -1 if unknown. Matches come
+							// back in MusicBrainz's own relevance order
+							// anyway.
 };
 
 } // namespace tagkit

@@ -13,12 +13,12 @@
 <p class="brief">The time limit for TagKit's network requests.</p>
 <pre>#include "tagkit/NetworkTimeout.h"</pre>
 <h2>Detailed Description</h2>
-<p>Downloads (<a href="HttpFetch.html">http_get()</a>, and so the Cover Art Archive
-and iTunes lookups) have a time limit, 30 seconds unless the program sets
-another with <code>set_network_timeout()</code>. It is handed to the
-<code>curl</code> command that does the download.</p>
-<p>The MusicBrainz search is the exception: libmusicbrainz5 has no way to set a
-time limit, so <a href="MusicBrainzSearch.html">MusicBrainzSearch</a> is not covered.</p>
+<p>Every web request TagKit makes goes through
+<a href="HttpFetch.html">http_get()</a> &mdash; the
+<a href="MusicBrainzSearch.html">MusicBrainz</a>, Cover Art Archive and
+<a href="ITunesArtwork.html">iTunes</a> lookups &mdash; and has a time limit, 30
+seconds unless the program sets another with <code>set_network_timeout()</code>.
+It is handed to the <code>curl</code> command that does the download.</p>
 <p>The lookups report a time-out through an optional <code>bool*</code>
 (<code>timedOut</code>), so a program can say "timed out" instead of "nothing
 found".</p>

@@ -17,9 +17,11 @@ repository (with its history) so other programs, such as Hare, can share it.
 - `CoverArtImage`, `CoverArtFetch`, `ITunesArtwork`, `HttpFetch` -- cover art
   kept as its original bytes, found on the Cover Art Archive
   with an iTunes fallback.
-- `MusicBrainzSearch`, `RecordingMatch` -- recording and release search.
-- `NetworkTimeout` -- the time limit (30 s by default, settable) that
-  downloads work under (the MusicBrainz search can't be limited).
+- `MusicBrainzSearch`, `RecordingMatch` -- recording and release search
+  (MusicBrainz web service, as JSON, through `HttpFetch`).
+- `NetworkTimeout` -- the time limit (30 s by default, settable) that every
+  web request works under.
+- `JsonValue` -- a small JSON reader, used for MusicBrainz's answers.
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
   `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`,
   `CoverArtPickerWindow`, `TagView`, `RecordingMatchView` -- views.
@@ -48,9 +50,8 @@ because the web services want to know which program is calling: define
 
 ## Requirements
 
-Haiku with the TagLib and libmusicbrainz5 development packages
-(`taglib_devel`, `libmusicbrainz5_devel`), and `curl` at
-run time for the iTunes lookups.
+Haiku with the TagLib development package (`taglib_devel`), and `curl` at
+run time for the MusicBrainz, Cover Art Archive and iTunes lookups.
 
 ## License
 

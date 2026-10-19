@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JsonValue - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Utilities &raquo; JsonValue</div>
+<div id="content">
+<h1>JsonValue</h1>
+<p class="brief">A small JSON reader for web service answers.</p>
+<pre>#include "tagkit/JsonValue.h"</pre>
+<h2>Detailed Description</h2>
+<p>Just enough JSON to read what MusicBrainz sends back. Reading never fails
+halfway: a missing key, or an index out of range, gives a null value that reads
+as an empty string, <code>0</code> and <code>false</code>, so lookups can be
+chained without checking each step:</p>
+<pre>JsonValue answer;
+if (JsonValue::Parse(text, length, answer)) {
+    BString title = answer.Get("recordings").At(0).Get("title").String();
+}</pre>
+<h2>Class Functions</h2>
+<table>
+<tr><td><a href="#Parse"><code>static bool JsonValue::Parse(const char* text, size_t length, JsonValue&amp; value)</code></a><br>Reads JSON text into a value.</td></tr>
+</table>
+<h2>Member Functions</h2>
+<table>
+<tr><td><code>Type GetType() const</code>, <code>bool IsNull()</code>, <code>IsString()</code>, <code>IsNumber()</code>, <code>IsArray()</code>, <code>IsObject()</code><br>What kind of value this is (<code>JSON_NULL</code>, <code>JSON_BOOL</code>, <code>JSON_NUMBER</code>, <code>JSON_STRING</code>, <code>JSON_ARRAY</code> or <code>JSON_OBJECT</code>).</td></tr>
+<tr><td><code>const BString&amp; String() const</code>, <code>double Number() const</code>, <code>bool Bool() const</code><br>The value as a string, number or boolean; empty, <code>0</code> or <code>false</code> when it is another type.</td></tr>
+<tr><td><code>int32 Count() const</code><br>How many items an array has, or members an object has; <code>0</code> for other types.</td></tr>
+<tr><td><code>const JsonValue&amp; At(int32 index) const</code><br>An array's item, or an object's member value, by position; null if out of range.</td></tr>
+<tr><td><code>const JsonValue&amp; Get(const char* key) const</code><br>An object's member by name; null if there is none. With repeated names the first one counts.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="Parse"><code>static bool JsonValue::Parse(const char* text, size_t length, JsonValue&amp; value)</code></h3>
+<p class="brief">Reads JSON text into a value.</p>
+<p>Understands the whole of JSON, including <code>\uXXXX</code> escapes (and
+pairs of them for characters above U+FFFF), which become UTF-8. Nesting more than
+64 levels deep is refused.</p>
+<h4>Parameters</h4><dl>
+<dt><code>text</code></dt><dd>The JSON, as UTF-8.</dd>
+<dt><code>length</code></dt><dd>How many bytes of <code>text</code> to read.</dd>
+<dt><code>value</code></dt><dd>Receives the result.</dd>
+</dl>
+<h4>Returns</h4><p class="param"><code>true</code> if the text was valid JSON with nothing but spaces after the value. Otherwise <code>false</code>, and <code>value</code> is left null.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>

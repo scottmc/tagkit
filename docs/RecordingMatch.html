@@ -45,7 +45,7 @@ several releases gives the user several candidate covers to choose from.</p>
 <tr><td><code>int32 track</code></td><td>Position on the first release's disc; <code>0</code> means unknown.</td></tr>
 <tr><td><code>int32 year</code></td><td>The first release's year; <code>0</code> means unknown.</td></tr>
 <tr><td><code>std::vector&lt;ReleaseRef&gt; releases</code></td><td>Every release the recording appears on (as many as MusicBrainz listed, capped), in MusicBrainz's order.</td></tr>
-<tr><td><code>int32 score</code></td><td>0&ndash;100 relevance MusicBrainz assigned, or <code>-1</code> if unknown. MusicBrainzSearch currently always leaves this at <code>-1</code>, but matches still come back in MusicBrainz's relevance order.</td></tr></table>
+<tr><td><code>int32 score</code></td><td>0&ndash;100 relevance MusicBrainz assigned, or <code>-1</code> if unknown. Matches come back in MusicBrainz's relevance order anyway.</td></tr></table>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>

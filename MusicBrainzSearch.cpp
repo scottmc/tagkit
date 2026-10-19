@@ -7,27 +7,14 @@
  *		Claude (Anthropic), coding
  */
 #include "MusicBrainzSearch.h"
-#include "ClientInfo.h"
+#include "HttpFetch.h"
+#include "JsonValue.h"
 
 #include <algorithm>
-#include <exception>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <Debug.h>
-
-#include <musicbrainz5/ArtistCredit.h>
-#include <musicbrainz5/Medium.h>
-#include <musicbrainz5/MediumList.h>
-#include <musicbrainz5/Metadata.h>
-#include <musicbrainz5/NameCredit.h>
-#include <musicbrainz5/NameCreditList.h>
-#include <musicbrainz5/Query.h>
-#include <musicbrainz5/Recording.h>
-#include <musicbrainz5/RecordingList.h>
-#include <musicbrainz5/Release.h>
-#include <musicbrainz5/ReleaseList.h>
-#include <musicbrainz5/Track.h>
-#include <musicbrainz5/TrackList.h>
 
 
 
@@ -39,6 +26,12 @@ namespace {
 // recordings can appear on dozens of compilations; the first few (MusicBrainz
 // lists the most relevant first) are plenty to choose between.
 const int32 kMaxReleasesPerMatch = 15;
+
+// How many recordings to ask MusicBrainz for (its own default).
+const int32 kRecordingSearchLimit = 25;
+
+// How many releases to ask MusicBrainz for.
+const int32 kReleaseSearchLimit = 50;
 
 
 BString
@@ -69,180 +62,197 @@ private:
 };
 
 
-// Joins a CArtistCredit's name-credit list into the single display
-// string MusicBrainz itself uses for an artist credit (handles
-// multi-artist collaborations, e.g. "Artist One feat. Artist Two") --
-// same approach as Hare's MusicBrainzLookup::JoinArtistCredit().
+// Joins an "artist-credit" array (each entry has a "name" and the
+// "joinphrase" that goes after it) into the single display string
+// MusicBrainz itself uses for an artist credit (handles multi-artist
+// collaborations, e.g. "Artist One feat. Artist Two").
 BString
-JoinArtistCredit(MusicBrainz5::CArtistCredit* credit)
+JoinArtistCredit(const JsonValue& credit)
 {
 	BString result;
-
-	if (credit == NULL || credit->NameCreditList() == NULL)
-		return result;
-
-	MusicBrainz5::CNameCreditList* names = credit->NameCreditList();
-	for (int i = 0; i < names->NumItems(); i++) {
-		MusicBrainz5::CNameCredit* nameCredit = names->Item(i);
-		if (nameCredit == NULL)
-			continue;
-		result << nameCredit->Name().c_str();
-		result << nameCredit->JoinPhrase().c_str();
+	for (int32 i = 0; i < credit.Count(); i++) {
+		result << credit.At(i).Get("name").String();
+		result << credit.At(i).Get("joinphrase").String();
 	}
-
 	return result;
 }
 
+
+// "YYYY", "YYYY-MM" or "YYYY-MM-DD" -- or empty when MusicBrainz doesn't
+// know the date. Returns the year, 0 if unknown.
+int32
+YearOf(const JsonValue& date)
+{
+	const BString& text = date.String();
+	return text.Length() >= 4 ? atoi(text.String()) : 0;
+}
+
+
+// Downloads a MusicBrainz web service search (type is "recording" or
+// "release") and reads the JSON answer. Returns B_OK with the parsed answer
+// in answer; B_TIMED_OUT if a time limit ran out; another error otherwise.
+status_t
+RunSearch(const char* type, const BString& luceneQuery, int32 limit,
+	JsonValue& answer)
+{
+	BString url("https://musicbrainz.org/ws/2/");
+	url << type << "?fmt=json&limit=" << limit << "&query="
+		<< url_encode(luceneQuery);
+
+	PRINT(("MusicBrainzSearch: %s\n", luceneQuery.String()));
+
+	std::vector<unsigned char> response;
+	BString error;
+	status_t status = http_get(url, response, &error);
+	if (status != B_OK) {
+		fprintf(stderr, "TagView: MusicBrainz %s search failed: %s\n", type,
+			error.String());
+		return status;
+	}
+
+	if (response.empty()
+			|| !JsonValue::Parse((const char*)&response[0], response.size(),
+				answer)) {
+		fprintf(stderr, "TagView: MusicBrainz %s search: unreadable "
+			"answer\n", type);
+		return B_BAD_DATA;
+	}
+
+	return B_OK;
+}
+
+
+// Where the recording sits on a release: the first track of the first disc
+// that lists it, 0 if the answer didn't carry a track list.
+int32
+TrackPosition(const JsonValue& release)
+{
+	const JsonValue& media = release.Get("media");
+	for (int32 m = 0; m < media.Count(); m++) {
+		const JsonValue& medium = media.At(m);
+		const JsonValue& tracks = medium.Get("track");
+		if (tracks.Count() == 0)
+			continue;
+
+		// The track's own number is a string ("3", or "A1" on vinyl); when
+		// it isn't a plain number, count from where the answer's list of
+		// tracks starts on the disc.
+		int32 position = atoi(tracks.At(0).Get("number").String().String());
+		if (position <= 0 && medium.Get("track-offset").IsNumber())
+			position = (int32)medium.Get("track-offset").Number() + 1;
+		return position > 0 ? position : 0;
+	}
+	return 0;
+}
 
 } // namespace
 
 
 std::vector<RecordingMatch>
 MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
-	const BString& album, int32 maxResults, int32 targetSeconds)
+	const BString& album, int32 maxResults, int32 targetSeconds,
+	bool* timedOut)
 {
 	std::vector<RecordingMatch> matches;
+	if (timedOut != NULL)
+		*timedOut = false;
 
 	if (artist.Length() == 0 || song.Length() == 0)
 		return matches;
 
-	MusicBrainz5::CQuery query(tagkit::user_agent());
+	BString luceneQuery;
+	luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist)
+		<< "\" AND recording:\"" << EscapeLuceneQuoted(song) << "\"";
+	if (album.Length() > 0)
+		luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album) << "\"";
 
-	try {
-		MusicBrainz5::CQuery::tParamMap searchParams;
+	JsonValue answer;
+	status_t status = RunSearch("recording", luceneQuery,
+		kRecordingSearchLimit, answer);
+	if (status != B_OK) {
+		if (status == B_TIMED_OUT && timedOut != NULL)
+			*timedOut = true;
+		return matches;
+	}
 
-		BString luceneQuery;
-		luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist)
-			<< "\" AND recording:\"" << EscapeLuceneQuoted(song) << "\"";
-		if (album.Length() > 0)
-			luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album)
-				<< "\"";
-		searchParams["query"] = luceneQuery.String();
+	const JsonValue& recordings = answer.Get("recordings");
+	if (recordings.Count() == 0) {
+		PRINT(("MusicBrainzSearch: no recordings found\n"));
+		return matches;
+	}
 
-		PRINT(("MusicBrainzSearch: %s\n", luceneQuery.String()));
+	// When sorting by length, look at everything MusicBrainz sent back
+	// (not just the first maxResults) so a close-length match further
+	// down its relevance list can still make the cut.
+	int32 count = recordings.Count();
+	if (targetSeconds < 0 && count > maxResults)
+		count = maxResults;
 
-		// Kept alive for the rest of the function -- candidateReleases-
-		// style pattern from Hare's MusicBrainzLookup: the list pointer
-		// below points into this, so it has to outlive the lookup.
-		MusicBrainz5::CMetadata result;
-		result = query.Query("recording", "", "", searchParams);
+	for (int32 i = 0; i < count; i++) {
+		const JsonValue& recording = recordings.At(i);
 
-		MusicBrainz5::CRecordingList* recordings = result.RecordingList();
-		if (recordings == NULL) {
-			PRINT(("MusicBrainzSearch: no recordings found\n"));
-			return matches;
-		}
+		RecordingMatch match;
+		match.id = recording.Get("id").String();
+		match.title = recording.Get("title").String();
+		match.artist = JoinArtistCredit(recording.Get("artist-credit"));
 
-		// When sorting by length, look at everything MusicBrainz sent back
-		// (not just the first maxResults) so a close-length match further
-		// down its relevance list can still make the cut.
-		int32 count = recordings->NumItems();
-		if (targetSeconds < 0 && count > maxResults)
-			count = maxResults;
+		// "length" is in milliseconds.
+		double length = recording.Get("length").Number();
+		match.durationSeconds = length > 0 ? (int32)(length / 1000) : -1;
 
-		for (int32 i = 0; i < count; i++) {
-			MusicBrainz5::CRecording* recording = recordings->Item(i);
-			if (recording == NULL)
-				continue;
+		// MusicBrainz's relevance score, 0-100. The results come back
+		// in this order anyway.
+		match.score = recording.Get("score").IsNumber()
+			? (int32)recording.Get("score").Number() : -1;
 
-			RecordingMatch match;
-			match.id = recording->ID().c_str();
-			match.title = recording->Title().c_str();
-			match.artist = JoinArtistCredit(recording->ArtistCredit());
-			match.durationSeconds = recording->Length() > 0
-				? recording->Length() / 1000 : -1;
-
-			// The relevance score MusicBrainz's search returns
-			// ("ext:score" in the raw XML) isn't exposed through this
-			// libmusicbrainz5 build's public API -- its parser logs it
-			// as an "Unrecognised recording attribute" and doesn't
-			// carry it into CEntity::ExtAttributes() either. Left at
-			// -1 (RecordingMatch's default); the results are still
-			// returned in MusicBrainz's own relevance order, so list
-			// position itself conveys the ranking.
-			match.score = -1;
-
-			MusicBrainz5::CReleaseList* releases = recording->ReleaseList();
-			if (releases != NULL && releases->NumItems() > 0
-					&& releases->Item(0) != NULL) {
-				// With an album given, the release whose title contains it
-				// is the one to report (and to try for cover art first);
-				// otherwise it's MusicBrainz's first release.
-				int32 chosen = 0;
-				if (album.Length() > 0) {
-					for (int32 r = 0; r < releases->NumItems(); r++) {
-						MusicBrainz5::CRelease* each = releases->Item(r);
-						if (each == NULL)
-							continue;
-						BString eachTitle = each->Title().c_str();
-						if (eachTitle.IFindFirst(album) >= 0) {
-							chosen = r;
-							break;
-						}
+		const JsonValue& releases = recording.Get("releases");
+		if (releases.Count() > 0) {
+			// With an album given, the release whose title contains it
+			// is the one to report (and to try for cover art first);
+			// otherwise it's MusicBrainz's first release.
+			int32 chosen = 0;
+			if (album.Length() > 0) {
+				for (int32 r = 0; r < releases.Count(); r++) {
+					BString eachTitle = releases.At(r).Get("title").String();
+					if (eachTitle.IFindFirst(album) >= 0) {
+						chosen = r;
+						break;
 					}
-				}
-
-				// Remember every release (capped) for cover art lookup,
-				// the chosen one first.
-				for (int32 n = 0; n < releases->NumItems()
-						&& (int32)match.releases.size() < kMaxReleasesPerMatch;
-						n++) {
-					int32 r = n == 0 ? chosen : (n <= chosen ? n - 1 : n);
-					MusicBrainz5::CRelease* each = releases->Item(r);
-					if (each == NULL)
-						continue;
-
-					ReleaseRef ref;
-					ref.id = each->ID().c_str();
-					ref.title = each->Title().c_str();
-					BString eachDate = each->Date().c_str();
-					if (eachDate.Length() >= 4)
-						ref.year = atoi(eachDate.String());
-					match.releases.push_back(ref);
-				}
-
-				MusicBrainz5::CRelease* release = releases->Item(chosen);
-				if (release == NULL)
-					release = releases->Item(0);
-				match.album = release->Title().c_str();
-
-				// Release date is "YYYY", "YYYY-MM" or "YYYY-MM-DD" --
-				// or empty when MusicBrainz doesn't know it.
-				BString date = release->Date().c_str();
-				if (date.Length() >= 4)
-					match.year = atoi(date.String());
-
-				// Where this recording sits on that release: the first
-				// track of the first disc that lists it. Left at 0 if
-				// the response didn't carry a track list.
-				MusicBrainz5::CMediumList* media = release->MediumList();
-				for (int32 m = 0; media != NULL && match.track == 0
-						&& m < media->NumItems(); m++) {
-					MusicBrainz5::CMedium* medium = media->Item(m);
-					if (medium == NULL || medium->TrackList() == NULL
-							|| medium->TrackList()->NumItems() == 0
-							|| medium->TrackList()->Item(0) == NULL) {
-						continue;
-					}
-					match.track = medium->TrackList()->Item(0)->Position();
 				}
 			}
 
-			matches.push_back(match);
+			// Remember every release (capped) for cover art lookup, the
+			// chosen one first.
+			for (int32 n = 0; n < releases.Count()
+					&& (int32)match.releases.size() < kMaxReleasesPerMatch;
+					n++) {
+				int32 r = n == 0 ? chosen : (n <= chosen ? n - 1 : n);
+				const JsonValue& each = releases.At(r);
+
+				ReleaseRef ref;
+				ref.id = each.Get("id").String();
+				ref.title = each.Get("title").String();
+				ref.year = YearOf(each.Get("date"));
+				match.releases.push_back(ref);
+			}
+
+			const JsonValue& release = releases.At(chosen);
+			match.album = release.Get("title").String();
+			match.year = YearOf(release.Get("date"));
+			match.track = TrackPosition(release);
 		}
 
-		if (targetSeconds >= 0) {
-			// stable_sort so equally-close matches keep MusicBrainz's
-			// relevance order.
-			std::stable_sort(matches.begin(), matches.end(),
-				CloserToTarget(targetSeconds));
-		}
-		if ((int32)matches.size() > maxResults)
-			matches.resize(maxResults);
-	} catch (std::exception& ex) {
-		PRINT(("MusicBrainzSearch: search failed: %s\n", ex.what()));
-		matches.clear();
+		matches.push_back(match);
 	}
+
+	if (targetSeconds >= 0) {
+		// stable_sort so equally-close matches keep MusicBrainz's
+		// relevance order.
+		std::stable_sort(matches.begin(), matches.end(),
+			CloserToTarget(targetSeconds));
+	}
+	if ((int32)matches.size() > maxResults)
+		matches.resize(maxResults);
 
 	return matches;
 }
@@ -250,63 +260,50 @@ MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
 
 std::vector<ReleaseRef>
 MusicBrainzSearch::SearchReleases(const BString& artist, const BString& album,
-	int32 maxResults)
+	int32 maxResults, bool* timedOut)
 {
 	std::vector<ReleaseRef> releases;
+	if (timedOut != NULL)
+		*timedOut = false;
 
 	if (artist.Length() == 0)
 		return releases;
 
-	MusicBrainz5::CQuery query(tagkit::user_agent());
+	BString luceneQuery;
+	luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist) << "\"";
+	if (album.Length() > 0)
+		luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album) << "\"";
 
-	try {
-		MusicBrainz5::CQuery::tParamMap searchParams;
+	JsonValue answer;
+	status_t status = RunSearch("release", luceneQuery, kReleaseSearchLimit,
+		answer);
+	if (status != B_OK) {
+		if (status == B_TIMED_OUT && timedOut != NULL)
+			*timedOut = true;
+		return releases;
+	}
 
-		BString luceneQuery;
-		luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist) << "\"";
-		if (album.Length() > 0)
-			luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album)
-				<< "\"";
-		searchParams["query"] = luceneQuery.String();
-		searchParams["limit"] = "50";
+	const JsonValue& list = answer.Get("releases");
+	for (int32 i = 0; i < list.Count()
+			&& (int32)releases.size() < maxResults; i++) {
+		const JsonValue& each = list.At(i);
 
-		PRINT(("MusicBrainzSearch: %s\n", luceneQuery.String()));
+		ReleaseRef ref;
+		ref.id = each.Get("id").String();
+		ref.title = each.Get("title").String();
+		ref.year = YearOf(each.Get("date"));
 
-		MusicBrainz5::CMetadata result;
-		result = query.Query("release", "", "", searchParams);
-
-		MusicBrainz5::CReleaseList* list = result.ReleaseList();
-		if (list == NULL)
-			return releases;
-
-		for (int32 i = 0; i < list->NumItems()
-				&& (int32)releases.size() < maxResults; i++) {
-			MusicBrainz5::CRelease* each = list->Item(i);
-			if (each == NULL)
-				continue;
-
-			ReleaseRef ref;
-			ref.id = each->ID().c_str();
-			ref.title = each->Title().c_str();
-			BString date = each->Date().c_str();
-			if (date.Length() >= 4)
-				ref.year = atoi(date.String());
-
-			// Reissues of one album share a cover; keep the first.
-			bool repeat = false;
-			for (size_t r = 0; r < releases.size(); r++) {
-				if (releases[r].year == ref.year
-						&& releases[r].title.ICompare(ref.title) == 0) {
-					repeat = true;
-					break;
-				}
+		// Reissues of one album share a cover; keep the first.
+		bool repeat = false;
+		for (size_t r = 0; r < releases.size(); r++) {
+			if (releases[r].year == ref.year
+					&& releases[r].title.ICompare(ref.title) == 0) {
+				repeat = true;
+				break;
 			}
-			if (!repeat)
-				releases.push_back(ref);
 		}
-	} catch (std::exception& ex) {
-		PRINT(("MusicBrainzSearch: release search failed: %s\n", ex.what()));
-		releases.clear();
+		if (!repeat)
+			releases.push_back(ref);
 	}
 
 	return releases;

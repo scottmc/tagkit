@@ -46,6 +46,7 @@ TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
 	GenreList.cpp \
 	HttpFetch.cpp \
 	ITunesArtwork.cpp \
+	JsonValue.cpp \
 	MusicBrainzSearch.cpp \
 	NetworkTimeout.cpp \
 	PendingEdits.cpp \
@@ -58,7 +59,7 @@ TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
 	TagWriter.cpp)
 
 # Libraries TagKit links against (add "be" yourself).
-TAGKIT_LIBS = tag translation tracker columnlistview musicbrainz5
+TAGKIT_LIBS = tag translation tracker columnlistview
 
 # Also needed, after TAGKIT_LIBS, if the app defines TAGKIT_USE_CATALOG: the
 # static stub that lets a program use catalogs (what B_TRANSLATE needs).

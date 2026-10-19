@@ -35,6 +35,11 @@ namespace tagkit {
 status_t http_get(const BString& url, std::vector<unsigned char>& data,
 	BString* errorMessage = NULL, int32 timeoutSeconds = 0);
 
+// Percent-encodes text so it can be used as a value in a URL's query (the
+// "term=..." part): everything but letters, digits and - _ . ~ becomes
+// %XX (UTF-8 bytes included, a space becomes %20).
+BString url_encode(const BString& text);
+
 } // namespace tagkit
 
 #endif // TAGKIT_HTTP_FETCH_H

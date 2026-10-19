@@ -9,9 +9,8 @@
 // NetworkTimeout.h
 //
 // Part of "tagkit" -- the reusable pieces of TagView.
-// The time limit TagKit's downloads (HttpFetch) work under. The one network
-// call that can't be limited this way is the MusicBrainz search, because
-// libmusicbrainz5 has no time limit setting.
+// The time limit TagKit's web requests (HttpFetch, which the MusicBrainz,
+// Cover Art Archive and iTunes lookups all use) work under.
 
 #ifndef TAGKIT_NETWORK_TIMEOUT_H
 #define TAGKIT_NETWORK_TIMEOUT_H

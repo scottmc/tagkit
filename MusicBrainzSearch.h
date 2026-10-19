@@ -9,10 +9,11 @@
 // MusicBrainzSearch.h
 //
 // Part of "tagkit" -- the reusable pieces of TagView.
-// A synchronous MusicBrainz recording (track) search by artist + title,
-// wrapping libmusicbrainz5 the same way Hare's MusicBrainzLookup does
-// (see src/Hare/MusicBrainzLookup.cpp there) so other apps can reuse
-// this instead of re-deriving the query/parsing boilerplate.
+// A synchronous MusicBrainz recording (track) search by artist + title, and
+// a release search by artist + album. Both ask MusicBrainz's web service
+// for JSON (through http_get(), so they have a time limit) and read the
+// answer, so other apps can reuse this instead of re-deriving the
+// query/parsing boilerplate.
 
 #ifndef TAGKIT_MUSIC_BRAINZ_SEARCH_H
 #define TAGKIT_MUSIC_BRAINZ_SEARCH_H
@@ -33,8 +34,11 @@ public:
 	// vector if there were no matches or the lookup failed for any reason
 	// (network error, malformed response, ...) -- failures are swallowed
 	// rather than thrown, so a failed search just looks like zero results.
-	// Note that libmusicbrainz5 gives no way to set a time limit, so a
-	// search over a stalled connection waits as long as the library does.
+	//
+	// A search is given network_timeout() seconds (NetworkTimeout.h). If it
+	// runs out and timedOut is given, *timedOut is set to true, so a caller
+	// can say "timed out" rather than "no matches". (It is false for every
+	// other outcome.)
 	//
 	// album is optional (pass an empty string to leave it out): when given
 	// it's added to the query so only recordings that appear on a matching
@@ -51,7 +55,7 @@ public:
 	// closer the length, the likelier it's the same recording.
 	static std::vector<RecordingMatch> SearchRecording(const BString& artist,
 		const BString& song, const BString& album, int32 maxResults = 10,
-		int32 targetSeconds = -1);
+		int32 targetSeconds = -1, bool* timedOut = NULL);
 
 	// For finding cover art without a song: releases by artist, narrowed
 	// to titles matching album if one is given (pass an empty string to
@@ -59,7 +63,7 @@ public:
 	// the same title and year dropped. Same rules as SearchRecording():
 	// network I/O on a worker thread, failures look like an empty result.
 	static std::vector<ReleaseRef> SearchReleases(const BString& artist,
-		const BString& album, int32 maxResults = 25);
+		const BString& album, int32 maxResults = 25, bool* timedOut = NULL);
 };
 
 } // namespace tagkit

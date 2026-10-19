@@ -47,6 +47,27 @@ IsSafeUrl(const BString& url)
 } // namespace
 
 
+BString
+url_encode(const BString& text)
+{
+	static const char* hex = "0123456789ABCDEF";
+
+	BString encoded;
+	for (int32 i = 0; i < text.Length(); i++) {
+		unsigned char c = (unsigned char)text.ByteAt(i);
+		if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+				|| (c >= '0' && c <= '9') || c == '-' || c == '_'
+				|| c == '.' || c == '~') {
+			encoded << (char)c;
+		} else {
+			char buffer[4] = { '%', hex[c >> 4], hex[c & 15], '\0' };
+			encoded << buffer;
+		}
+	}
+	return encoded;
+}
+
+
 status_t
 http_get(const BString& url, std::vector<unsigned char>& data,
 	BString* errorMessage, int32 timeoutSeconds)

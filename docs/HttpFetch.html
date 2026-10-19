@@ -22,9 +22,20 @@ the whole time limit, which is <a href="NetworkTimeout.html">network_timeout()</
 unless a call asks for another.</p>
 <h2>Functions</h2>
 <table>
+<tr><td><a href="#url_encode"><code>BString url_encode(const BString&amp; text)</code></a><br>Percent-encodes text for use in a URL's query.</td></tr>
 <tr><td><a href="#http_get"><code>status_t http_get(const BString&amp; url, std::vector&lt;unsigned char&gt;&amp; data, BString* errorMessage = NULL, int32 timeoutSeconds = 0)</code></a><br>Downloads a URL into a buffer.</td></tr>
 </table>
 <h2>Documentation</h2>
+<div class="member"><h3 id="url_encode"><code>BString url_encode(const BString&amp; text)</code></h3>
+<p class="brief">Percent-encodes text for use in a URL's query.</p>
+<p>Everything but letters, digits and <code>- _ . ~</code> becomes
+<code>%XX</code> (the bytes of UTF-8 characters included; a space becomes
+<code>%20</code>). Use it on each value you put after a <code>?</code>.</p>
+<h4>Parameters</h4><dl>
+<dt><code>text</code></dt><dd>The text to encode.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The encoded text.</p>
+</div>
 <div class="member"><h3 id="http_get"><code>status_t http_get(const BString&amp; url, std::vector&lt;unsigned char&gt;&amp; data, BString* errorMessage = NULL, int32 timeoutSeconds = 0)</code></h3>
 <p class="brief">Downloads a URL into a buffer.</p>
 <p>Blocks until done, so call it from a worker thread, never the UI thread.</p>
