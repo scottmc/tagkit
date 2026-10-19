@@ -47,6 +47,7 @@ TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
 	HttpFetch.cpp \
 	ITunesArtwork.cpp \
 	MusicBrainzSearch.cpp \
+	NetworkTimeout.cpp \
 	PendingEdits.cpp \
 	RecordingMatchView.cpp \
 	TagAttributes.cpp \

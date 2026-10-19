@@ -18,6 +18,8 @@ repository (with its history) so other programs, such as Hare, can share it.
   kept as its original bytes, found on the Cover Art Archive (libcoverart)
   with an iTunes fallback.
 - `MusicBrainzSearch`, `RecordingMatch` -- recording and release search.
+- `NetworkTimeout` -- the time limit (30 s by default, settable) every
+  network request works under, and a helper for limiting library calls.
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
   `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`,
   `CoverArtPickerWindow`, `TagView`, `RecordingMatchView` -- views.

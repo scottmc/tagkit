@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetworkTimeout - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Web lookups &raquo; NetworkTimeout</div>
+<div id="content">
+<h1>NetworkTimeout</h1>
+<p class="brief">The time limit for TagKit's network requests.</p>
+<pre>#include "tagkit/NetworkTimeout.h"</pre>
+<h2>Detailed Description</h2>
+<p>Every request TagKit makes has a time limit, 30 seconds unless the program
+sets another with <code>set_network_timeout()</code>. Downloads
+(<a href="HttpFetch.html">http_get()</a>, and so the iTunes lookup) hand the limit to
+<code>curl</code>. The MusicBrainz search and the Cover Art Archive lookup use
+libraries with no time limit of their own, so each of those calls runs on a
+helper thread that is given up on when the time is up.</p>
+<p>A helper thread that has been given up on is not killed, because killing a
+thread in the middle of network code can leave locks held. It finishes by
+itself and its result is thrown away. A program does not have to do anything
+about this, but if it uses <code>run_with_timeout()</code> itself the work must
+only use data the helper thread owns.</p>
+<p>The lookups report a time-out through an optional <code>bool*</code>
+(<code>timedOut</code>), so a program can say "timed out" instead of "nothing
+found".</p>
+<h2>Constants</h2>
+<table>
+<tr><td><code>const int32 kDefaultNetworkTimeoutSeconds = 30</code><br>The limit used until the program sets another.</td></tr>
+</table>
+<h2>Functions</h2>
+<table>
+<tr><td><a href="#set_network_timeout"><code>void set_network_timeout(int32 seconds)</code></a><br>Sets the time limit for the whole program.</td></tr>
+<tr><td><a href="#network_timeout"><code>int32 network_timeout()</code></a><br>Returns the time limit in seconds.</td></tr>
+<tr><td><a href="#run_with_timeout"><code>bool run_with_timeout(int32 seconds, const std::function&lt;void()&gt;&amp; work)</code></a><br>Runs a function on a helper thread and waits for it, up to a limit.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="set_network_timeout"><code>void set_network_timeout(int32 seconds)</code></h3>
+<p class="brief">Sets the time limit for the whole program.</p>
+<p>Values are kept between 1 and 600 seconds.</p>
+<h4>Parameters</h4><dl>
+<dt><code>seconds</code></dt><dd>How long one network request may take.</dd>
+</dl>
+</div>
+<div class="member"><h3 id="network_timeout"><code>int32 network_timeout()</code></h3>
+<p class="brief">Returns the time limit in seconds.</p>
+</div>
+<div class="member"><h3 id="run_with_timeout"><code>bool run_with_timeout(int32 seconds, const std::function&lt;void()&gt;&amp; work)</code></h3>
+<p class="brief">Runs a function on a helper thread and waits for it, up to a limit.</p>
+<p>If no thread can be started, <code>work()</code> runs right here with no limit.
+Exceptions that escape <code>work()</code> are caught and ignored.</p>
+<h4>Parameters</h4><dl>
+<dt><code>seconds</code></dt><dd>How long to wait.</dd>
+<dt><code>work</code></dt><dd>What to run. It must only touch data it owns (copies, or results held by a <code>shared_ptr</code>), never the caller's local variables, because it may outlive the call.</dd>
+</dl>
+<h4>Returns</h4><p class="param"><code>true</code> if it finished in time, <code>false</code> if the time ran out.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>

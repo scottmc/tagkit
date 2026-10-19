@@ -32,8 +32,15 @@ typedef std::function<void(const CoverArtImage&)> CoverArtFoundFunction;
 // instead of waiting for all of them, so a caller can show the first ones
 // while the rest are still being fetched. found() is called on the calling
 // (worker) thread. Returns how many covers were found.
+//
+// Each release's request gets network_timeout() seconds (NetworkTimeout.h).
+// When one runs out the lookup stops there (the network is most likely
+// down, so the rest would only repeat the wait) and, if timedOut is given,
+// *timedOut is set to true; covers already found are still reported and
+// counted.
 int32 fetch_cover_art(const std::vector<ReleaseRef>& releases,
-	int32 maxImages, const CoverArtFoundFunction& found);
+	int32 maxImages, const CoverArtFoundFunction& found,
+	bool* timedOut = NULL);
 
 // Fetches each release's front cover (in the given order) until maxImages
 // have been found. Releases with no cover art, or whose fetch fails, are
@@ -43,7 +50,8 @@ int32 fetch_cover_art(const std::vector<ReleaseRef>& releases,
 // Performs network I/O, one request per release: always call this from a
 // worker thread, never the UI thread.
 std::vector<CoverArtImage> fetch_cover_art(
-	const std::vector<ReleaseRef>& releases, int32 maxImages = 12);
+	const std::vector<ReleaseRef>& releases, int32 maxImages = 12,
+	bool* timedOut = NULL);
 
 } // namespace tagkit
 

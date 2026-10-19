@@ -8,6 +8,7 @@
  */
 #include "HttpFetch.h"
 #include "ClientInfo.h"
+#include "NetworkTimeout.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -48,9 +49,12 @@ IsSafeUrl(const BString& url)
 
 status_t
 http_get(const BString& url, std::vector<unsigned char>& data,
-	BString* errorMessage)
+	BString* errorMessage, int32 timeoutSeconds)
 {
 	data.clear();
+
+	if (timeoutSeconds <= 0)
+		timeoutSeconds = network_timeout();
 
 	if (!IsSafeUrl(url)) {
 		if (errorMessage != NULL)
@@ -60,8 +64,15 @@ http_get(const BString& url, std::vector<unsigned char>& data,
 
 	// Haiku's own curl: follows redirects (-L), fails on HTTP errors (-f),
 	// stays quiet but still reports errors (-sS, which go to stderr and
-	// are dropped), and gives up after 20 seconds (-m).
-	BString command("curl -sSfL -m 20 -A '");
+	// are dropped). Gives up if no connection is made within the connect
+	// limit (--connect-timeout), if the transfer stalls (under 1 byte a
+	// second for --speed-time seconds), or after timeoutSeconds in all
+	// (-m).
+	int32 connectSeconds = timeoutSeconds < 10 ? timeoutSeconds : 10;
+	int32 stallSeconds = timeoutSeconds < 15 ? timeoutSeconds : 15;
+	BString command("curl -sSfL --connect-timeout ");
+	command << connectSeconds << " --speed-limit 1 --speed-time "
+		<< stallSeconds << " -m " << timeoutSeconds << " -A '";
 	command << tagkit::user_agent() << "' -- '" << url << "' 2>/dev/null";
 
 	FILE* pipe = popen(command.String(), "r");
@@ -93,11 +104,20 @@ http_get(const BString& url, std::vector<unsigned char>& data,
 
 	if (status == -1 || !WIFEXITED(status) || WEXITSTATUS(status) != 0) {
 		data.clear();
+
+		// curl's exit codes: 28 is any of its time limits, 6 and 7 mean
+		// the host couldn't be found or reached.
+		int32 exitCode = (status != -1 && WIFEXITED(status))
+			? (int32)WEXITSTATUS(status) : -1;
+		if (exitCode == 28) {
+			if (errorMessage != NULL)
+				*errorMessage = "timed out";
+			return B_TIMED_OUT;
+		}
 		if (errorMessage != NULL) {
 			*errorMessage << "curl failed";
-			if (status != -1 && WIFEXITED(status))
-				*errorMessage << " (exit status " << (int32)WEXITSTATUS(status)
-					<< ")";
+			if (exitCode >= 0)
+				*errorMessage << " (exit status " << exitCode << ")";
 		}
 		return B_ERROR;
 	}

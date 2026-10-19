@@ -228,8 +228,11 @@ LargeArtworkUrl(const BString& url)
 
 int32
 fetch_itunes_cover_art(const BString& artist, const BString& album,
-	int32 maxImages, const CoverArtFoundFunction& found)
+	int32 maxImages, const CoverArtFoundFunction& found, bool* timedOut)
 {
+	if (timedOut != NULL)
+		*timedOut = false;
+
 	if (artist.Length() == 0 || maxImages <= 0)
 		return 0;
 
@@ -243,9 +246,12 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 
 	std::vector<unsigned char> response;
 	BString error;
-	if (http_get(url, response, &error) != B_OK) {
+	status_t searchStatus = http_get(url, response, &error);
+	if (searchStatus != B_OK) {
 		fprintf(stderr, "TagView: iTunes search failed: %s\n",
 			error.String());
+		if (searchStatus == B_TIMED_OUT && timedOut != NULL)
+			*timedOut = true;
 		return 0;
 	}
 
@@ -274,10 +280,17 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 
 		std::vector<unsigned char> data;
 		BString artworkError;
-		if (http_get(LargeArtworkUrl(candidate.artworkUrl), data,
-				&artworkError) != B_OK || data.empty()) {
+		status_t artworkStatus = http_get(LargeArtworkUrl(candidate.artworkUrl),
+			data, &artworkError);
+		if (artworkStatus != B_OK || data.empty()) {
 			fprintf(stderr, "TagView: no iTunes artwork for \"%s\": %s\n",
 				candidate.title.String(), artworkError.String());
+			if (artworkStatus == B_TIMED_OUT) {
+				// The network is most likely down: don't wait on the rest.
+				if (timedOut != NULL)
+					*timedOut = true;
+				break;
+			}
 			continue;
 		}
 

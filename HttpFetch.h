@@ -29,9 +29,11 @@ namespace tagkit {
 // Downloads url into data (replacing its contents). Blocks until done, so
 // call it from a worker thread, never the UI thread. Returns B_OK only for
 // a successful (2xx) response; otherwise an error, with a short reason in
-// errorMessage if one is given.
+// errorMessage if one is given. B_TIMED_OUT means the server couldn't be
+// reached, stalled, or took longer than timeoutSeconds in all (0, the
+// default, uses network_timeout() from NetworkTimeout.h).
 status_t http_get(const BString& url, std::vector<unsigned char>& data,
-	BString* errorMessage = NULL);
+	BString* errorMessage = NULL, int32 timeoutSeconds = 0);
 
 } // namespace tagkit
 

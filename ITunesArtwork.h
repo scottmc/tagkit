@@ -32,8 +32,13 @@ namespace tagkit {
 // "<album> (iTunes)" and releaseId "itunes:<collection id>". Returns how
 // many covers were found, at most maxImages. Performs network I/O: call it
 // from a worker thread.
+//
+// Requests use http_get()'s time limit (network_timeout()); if one runs
+// out the lookup stops there and, if timedOut is given, *timedOut is set to
+// true (covers already found are still reported and counted).
 int32 fetch_itunes_cover_art(const BString& artist, const BString& album,
-	int32 maxImages, const CoverArtFoundFunction& found);
+	int32 maxImages, const CoverArtFoundFunction& found,
+	bool* timedOut = NULL);
 
 } // namespace tagkit
 
