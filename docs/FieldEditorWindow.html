@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FieldEditorWindow - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Views &raquo; FieldEditorWindow</div>
+<div id="content">
+<h1>FieldEditorWindow</h1>
+<p class="brief">A small window for editing one field where it was right-clicked.</p>
+<pre>#include "tagkit/FieldEditorWindow.h"</pre>
+<h2>Detailed Description</h2>
+<p>Opened where the user right-clicked a tag field (in a <a href="CompactView.html">CompactView</a> or a <a href="TagView.html">TagView</a>), with one text field. Return, or clicking anywhere else, accepts the text; Escape cancels.</p>
+<p>With a list of choices (the <a href="GenreList.html">genre list</a>, say) the text field is replaced by a drop-down menu: picking an entry accepts it straight away. Recently picked choices, if given, come first, set off from the full list by a line. <strong>(none)</strong> at the top clears the value, and a current value that isn't in the list is kept as an entry of its own, so opening the editor never loses it. <strong>Other&hellip;</strong> at the bottom turns the menu into a text field for a value that isn't in the list.</p>
+<p>When the value stands for several files that don't agree (<code>mixed</code>), the editor starts out blank. Clicking elsewhere with nothing typed then cancels instead of accepting a blank, so a stray click can't clear the field of every file; Return in the blank field, or picking (none), still does.</p>
+<p>Accepting sends a copy of the message given to the constructor to the target, with the text added as <code>"value"</code>; put whatever is needed to find the way back (which row, which field) in that message. Cancelling sends nothing. Either way, once the window is gone it sends <code>kMsgFieldEditorClosed</code> (with the window as <code>"editor"</code>) so the caller can drop its pointer. Needs only <code>be</code>.</p>
+<h2>Member Functions</h2>
+<table>
+<tr><td><a href="#FieldEditorWindow_ctor"><code>FieldEditorWindow(BMessenger target, const BMessage&amp; result, const char* label, const char* initialText, BPoint screenPosition, float width, const std::vector&lt;BString&gt;* choices, const std::vector&lt;BString&gt;* recent, bool mixed)</code></a><br>Creates the window (not yet shown).</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="FieldEditorWindow_ctor"><code>FieldEditorWindow(BMessenger target, const BMessage&amp; result, const char* label, const char* initialText, BPoint screenPosition, float width, const std::vector&lt;BString&gt;* choices = NULL, const std::vector&lt;BString&gt;* recent = NULL, bool mixed = false)</code></h3>
+<p class="brief">Creates the window (not yet shown).</p>
+<h4>Parameters</h4><dl>
+<dt><code>target</code></dt><dd>Where the accepted value and the closed message go.</dd>
+<dt><code>result</code></dt><dd>The message sent on accepting, copied; <code>"value"</code> is added.</dd>
+<dt><code>label</code></dt><dd>The field's name, for the title and the label.</dd>
+<dt><code>initialText</code></dt><dd>The current value.</dd>
+<dt><code>screenPosition</code></dt><dd>Where the user clicked; the window opens around it, kept on screen.</dd>
+<dt><code>width</code></dt><dd>The width of the cell being edited; the window is at least that wide (and never under 280 pixels).</dd>
+<dt><code>choices</code></dt><dd>The drop-down's entries, or <code>NULL</code> for a text field.</dd>
+<dt><code>recent</code></dt><dd>Entries to list first, newest first, or <code>NULL</code>.</dd>
+<dt><code>mixed</code></dt><dd><code>true</code> if the value stands for several files that differ; see above.</dd>
+</dl>
+<p>Call <code>Show()</code> to open it.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>
