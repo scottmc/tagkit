@@ -15,9 +15,9 @@
 
 #include <Bitmap.h>
 #include <Font.h>
-#include <Message.h>
 #include <GradientLinear.h>
 #include <InterfaceDefs.h>
+#include <Message.h>
 #include <Rect.h>
 #include <Size.h>
 #include <String.h>
