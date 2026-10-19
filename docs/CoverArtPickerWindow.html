@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CoverArtPickerWindow - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Views &raquo; CoverArtPickerWindow</div>
+<div id="content">
+<h1>CoverArtPickerWindow</h1>
+<p class="brief">A window for choosing one cover from several candidates.</p>
+<pre>#include "tagkit/CoverArtPickerWindow.h"</pre>
+<h2>Detailed Description</h2>
+<p>Shown when a lookup turned up cover art on more than one release: a scrollable strip of thumbnails (a <a href="CoverArtCandidatesView.html">CoverArtCandidatesView</a>) with the selected release's title and year underneath, as in Hare's picker. It doesn't block: more covers can be added while it is open, as a lookup finds them.</p>
+<p><strong>Use Selected Cover</strong> (or double-clicking a thumbnail) sends <code>kMsgCoverArtPickerChosen</code> to the target, with the chosen candidate's <code>"index"</code> (int32) &mdash; its position in the vector given to the constructor, and in the order added since &mdash; then closes the window.</p>
+<p>However the window closes (Use Selected Cover, Cancel, the close box), the target then gets <code>kMsgCoverArtPickerClosed</code> with the window's last frame as <code>"frame"</code> (a BRect), so the program can remember where the user left it and can drop its pointer to the window. Calling <code>Quit()</code> on the window yourself sends nothing. Where the window first opens is up to the program: move it after constructing and before <code>Show()</code>. Needs only <code>be</code> (and the Translation Kit, for decoding the images).</p>
+<h2>Member Functions</h2>
+<table>
+<tr><td><a href="#CoverArtPickerWindow_ctor"><code>CoverArtPickerWindow(BMessenger target, const BString&amp; fileName, const std::vector&lt;CoverArtImage&gt;&amp; images)</code></a><br>Creates the window (not yet shown).</td></tr>
+<tr><td><a href="#AddImage"><code>void AddImage(const CoverArtImage&amp; image)</code></a><br>Adds a candidate that turned up later.</td></tr>
+<tr><td><a href="#SetLoading"><code>void SetLoading(bool loading)</code></a><br>Shows or hides the &ldquo;still looking&rdquo; note.</td></tr>
+<tr><td><a href="#MoveToFrontAndFocus"><code>void MoveToFrontAndFocus()</code></a><br>Shows the window and brings it to the front.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="CoverArtPickerWindow_ctor"><code>CoverArtPickerWindow(BMessenger target, const BString&amp; fileName, const std::vector&lt;CoverArtImage&gt;&amp; images)</code></h3>
+<p class="brief">Creates the window (not yet shown).</p>
+<h4>Parameters</h4><dl>
+<dt><code>target</code></dt><dd>Where the chosen and closed messages go.</dd>
+<dt><code>fileName</code></dt><dd>The file the cover is for, named in the prompt.</dd>
+<dt><code>images</code></dt><dd>The candidates so far, each with its release title and year for the caption. A candidate that won't decode stays as a placeholder so the indexes match.</dd>
+</dl>
+</div>
+<div class="member"><h3 id="AddImage"><code>void AddImage(const CoverArtImage&amp; image)</code></h3>
+<p class="brief">Adds a candidate that turned up later.</p>
+<p>Covers keep arriving while a lookup is still working through the releases. Safe to call from another window's thread.</p>
+</div>
+<div class="member"><h3 id="SetLoading"><code>void SetLoading(bool loading)</code></h3>
+<p class="brief">Shows or hides the &ldquo;still looking&rdquo; note.</p>
+<p>In the prompt above the thumbnails. Safe to call from another window's thread.</p>
+</div>
+<div class="member"><h3 id="MoveToFrontAndFocus"><code>void MoveToFrontAndFocus()</code></h3>
+<p class="brief">Shows the window and brings it to the front.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>

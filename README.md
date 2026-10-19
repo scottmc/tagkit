@@ -19,8 +19,8 @@ repository (with its history) so other programs, such as Hare, can share it.
   with an iTunes fallback.
 - `MusicBrainzSearch`, `RecordingMatch` -- recording and release search.
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
-  `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`, `TagView`,
-  `RecordingMatchView` -- views.
+  `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`,
+  `CoverArtPickerWindow`, `TagView`, `RecordingMatchView` -- views.
 - `PendingEdits` -- remembers hand edits to rows until they are applied or
   discarded, for any kind of list.
 - `GenreList`, `ClientInfo` -- the genre names, and the User-Agent that web

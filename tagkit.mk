@@ -34,6 +34,7 @@ TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
 	CoverArtDragDrop.cpp \
 	CoverArtFetch.cpp \
 	CoverArtImage.cpp \
+	CoverArtPickerWindow.cpp \
 	CoverArtView.cpp \
 	EmptyArtButton.cpp \
 	FieldEditorWindow.cpp \
