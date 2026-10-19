@@ -20,6 +20,7 @@
 #include <View.h>
 
 #include "CoverArtDragDrop.h"
+#include "EmptyArtButton.h"
 
 class BBitmap;
 class BMessage;
@@ -52,6 +53,15 @@ public:
 	// can open a context menu there. The view takes ownership.
 			void				SetContextMessage(BMessage* message);
 
+	// A button (icon over label) drawn in the placeholder's place while there
+	// is no cover, such as "Load CD"; pressing it posts message to Window().
+	// Takes ownership of icon (NULL for none) and message; a NULL message
+	// removes the button. It starts out visible; SetEmptyButtonVisible()
+	// hides and shows it again. See EmptyArtButton.
+			void				SetEmptyButton(const char* label,
+									BBitmap* icon, BMessage* message);
+			void				SetEmptyButtonVisible(bool visible);
+
 	// Takes ownership of bitmap (NULL shows the placeholder), freeing
 	// whatever was shown before.
 			void				SetBitmap(BBitmap* bitmap);
@@ -61,6 +71,7 @@ private:
 			BBitmap*			fBitmap;
 			BMessage*			fContextMessage;
 			CoverArtDragDrop	fDragDrop;
+			EmptyArtButton		fButton;
 };
 
 } // namespace tagkit

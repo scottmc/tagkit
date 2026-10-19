@@ -24,6 +24,7 @@
 #include <Window.h>
 
 #include "CoverArtDragDrop.h"
+#include "EmptyArtButton.h"
 #include "TagField.h"
 #include "TagRecord.h"
 
@@ -480,8 +481,13 @@ public:
 		// may start dragging the image out.
 		if ((buttons & B_SECONDARY_MOUSE_BUTTON) != 0)
 			fOwner->_RequestCoverMenu(ConvertToScreen(where));
-		else if ((buttons & B_PRIMARY_MOUSE_BUTTON) != 0)
+		else if ((buttons & B_PRIMARY_MOUSE_BUTTON) != 0) {
+			// With no art, a press on the empty-art button (if there is
+			// one) is a click, not the start of a drag.
+			if (fBitmap == NULL && fButton.MouseDown(this, where, Bounds()))
+				return;
 			fDragDrop.MouseDown(this, where, fBitmap);
+		}
 	}
 
 	virtual void MouseMoved(BPoint where, uint32 transit,
@@ -493,6 +499,8 @@ public:
 
 	virtual void MouseUp(BPoint where)
 	{
+		if (fButton.MouseUp(this, where, Bounds()))
+			return;
 		fDragDrop.MouseUp();
 		BView::MouseUp(where);
 	}
@@ -504,6 +512,7 @@ public:
 	}
 
 	CoverArtDragDrop& DragDrop() { return fDragDrop; }
+	EmptyArtButton& Button() { return fButton; }
 
 	virtual ~CompactArtSquare()
 	{
@@ -553,6 +562,8 @@ public:
 			gradient.AddColor(make_color(120, 175, 245), 0);
 			gradient.AddColor(make_color(25, 70, 160), 255);
 			FillRect(bounds, gradient);
+
+			fButton.Draw(this, bounds);
 		}
 
 		SetHighColor(ui_color(B_CONTROL_BORDER_COLOR));
@@ -563,6 +574,7 @@ private:
 	CompactView*		fOwner;
 	BBitmap*			fBitmap;
 	CoverArtDragDrop	fDragDrop;
+	EmptyArtButton		fButton;
 };
 
 
@@ -798,6 +810,23 @@ CompactView::SetRecords(const std::vector<const TagRecord*>& records)
 		fFileName = BString();
 	}
 	Invalidate();
+}
+
+
+void
+CompactView::SetEmptyButton(const char* label, BBitmap* icon,
+	BMessage* message)
+{
+	fArtSquare->Button().SetButton(label, icon, message);
+	fArtSquare->Invalidate();
+}
+
+
+void
+CompactView::SetEmptyButtonVisible(bool visible)
+{
+	fArtSquare->Button().SetVisible(visible);
+	fArtSquare->Invalidate();
 }
 
 

@@ -19,7 +19,8 @@ repository (with its history) so other programs, such as Hare, can share it.
   with an iTunes fallback.
 - `MusicBrainzSearch`, `RecordingMatch` -- recording and release search.
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
-  `CoverArtDragDrop`, `TagView`, `RecordingMatchView` -- views.
+  `CoverArtDragDrop`, `EmptyArtButton`, `TagView`, `RecordingMatchView` --
+  views.
 - `GenreList`, `ClientInfo` -- the genre names, and the User-Agent that web
   services get told (the program using TagKit supplies its own name).
 

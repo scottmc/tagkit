@@ -27,6 +27,8 @@ the window, with details added; the window decides what to do.</p>
 <tr><td><a href="#Clear"><code>void Clear()</code></a><br>Shows the placeholder.</td></tr>
 <tr><td><a href="#SetDragMessage"><code>void SetDragMessage(BMessage* message)</code></a><br>Sets the message dragged out of the view.</td></tr>
 <tr><td><a href="#SetDropMessage"><code>void SetDropMessage(BMessage* message)</code></a><br>Sets the message posted when an image is dropped on the view.</td></tr>
+<tr><td><a href="#SetEmptyButton"><code>void SetEmptyButton(const char* label, BBitmap* icon, BMessage* message)</code></a><br>Sets a button shown while there is no cover.</td></tr>
+<tr><td><a href="#SetEmptyButtonVisible"><code>void SetEmptyButtonVisible(bool visible)</code></a><br>Hides or shows that button.</td></tr>
 <tr><td><a href="#SetContextMessage"><code>void SetContextMessage(BMessage* message)</code></a><br>Sets the message posted when the view is right-clicked.</td></tr>
 </table>
 <h2>Documentation</h2>
@@ -48,6 +50,14 @@ the window, with details added; the window decides what to do.</p>
 <div class="member"><h3 id="SetDropMessage"><code>void SetDropMessage(BMessage* message)</code></h3>
 <p class="brief">Sets the message posted when an image is dropped on the view.</p>
 <p>Posted to the window with the dropped image added. The view takes ownership.</p>
+</div>
+<div class="member"><h3 id="SetEmptyButton"><code>void SetEmptyButton(const char* label, BBitmap* icon, BMessage* message)</code></h3>
+<p class="brief">Sets a button shown while there is no cover.</p>
+<p>An icon over a label on a translucent chip, drawn in the middle of the empty view, for something like &ldquo;Load CD&rdquo;. Pressing it posts <code>message</code> to the window. Takes ownership of <code>icon</code> (<code>NULL</code> for none) and <code>message</code>; a <code>NULL</code> message removes the button. It starts out visible. See <a href="EmptyArtButton.html">EmptyArtButton</a>.</p>
+</div>
+<div class="member"><h3 id="SetEmptyButtonVisible"><code>void SetEmptyButtonVisible(bool visible)</code></h3>
+<p class="brief">Hides or shows that button.</p>
+<p>For a program that only wants the button at times (Hare shows Load CD only while a CD is mounted).</p>
 </div>
 <div class="member"><h3 id="SetContextMessage"><code>void SetContextMessage(BMessage* message)</code></h3>
 <p class="brief">Sets the message posted when the view is right-clicked.</p>

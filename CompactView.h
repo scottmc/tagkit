@@ -98,6 +98,16 @@ public:
 			void				SetCoverDragMessage(BMessage* message);
 			void				SetCoverDropMessage(BMessage* message);
 
+	// A button drawn in the middle of the art square while there is no cover
+	// (the blue gradient shows), such as "Load CD": an icon over label.
+	// Pressing it posts message to Window(). Takes ownership of icon (NULL
+	// for none) and message; a NULL message removes the button. It starts
+	// out visible; SetEmptyButtonVisible() hides and shows it again, for a
+	// program that only wants it at times. See EmptyArtButton.
+			void				SetEmptyButton(const char* label,
+									BBitmap* icon, BMessage* message);
+			void				SetEmptyButtonVisible(bool visible);
+
 	// Like the cover art view's: posted to Window() (with the pointer's
 	// screen position as "where") when the cover art square is
 	// right-clicked. The view takes ownership of the message.

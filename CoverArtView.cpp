@@ -16,6 +16,8 @@
 #include <String.h>
 #include <Window.h>
 
+#include "EmptyArtButton.h"
+
 
 namespace tagkit {
 
@@ -76,6 +78,8 @@ CoverArtView::MouseMoved(BPoint where, uint32 transit,
 void
 CoverArtView::MouseUp(BPoint where)
 {
+	if (fButton.MouseUp(this, where, Bounds()))
+		return;
 	fDragDrop.MouseUp();
 	BView::MouseUp(where);
 }
@@ -97,9 +101,13 @@ CoverArtView::MouseDown(BPoint where)
 	if (current != NULL)
 		current->FindInt32("buttons", &buttons);
 
-	// Primary button: maybe the start of a drag out of the view.
-	if ((buttons & B_PRIMARY_MOUSE_BUTTON) != 0)
+	// Primary button: a click on the empty-art button, or maybe the start of
+	// a drag out of the view.
+	if ((buttons & B_PRIMARY_MOUSE_BUTTON) != 0) {
+		if (fBitmap == NULL && fButton.MouseDown(this, where, Bounds()))
+			return;
 		fDragDrop.MouseDown(this, where, fBitmap);
+	}
 
 	if (fContextMessage == NULL
 			|| (buttons & B_SECONDARY_MOUSE_BUTTON) == 0) {
@@ -110,6 +118,23 @@ CoverArtView::MouseDown(BPoint where)
 	BMessage* request = new BMessage(*fContextMessage);
 	request->AddPoint("where", ConvertToScreen(where));
 	Window()->PostMessage(request);
+}
+
+
+void
+CoverArtView::SetEmptyButton(const char* label, BBitmap* icon,
+	BMessage* message)
+{
+	fButton.SetButton(label, icon, message);
+	Invalidate();
+}
+
+
+void
+CoverArtView::SetEmptyButtonVisible(bool visible)
+{
+	fButton.SetVisible(visible);
+	Invalidate();
 }
 
 
@@ -160,9 +185,15 @@ CoverArtView::Draw(BRect updateRect)
 		return;
 	}
 
-	// Placeholder: an outlined square with a short label.
+	// Placeholder: an outlined square with a short label, or the empty-art
+	// button in its place.
 	SetHighColor(ui_color(B_CONTROL_BORDER_COLOR));
 	StrokeRect(bounds);
+
+	if (fButton.IsActive()) {
+		fButton.Draw(this, bounds);
+		return;
+	}
 
 	const char* label = "No cover art";
 	SetHighColor(tint_color(ui_color(B_PANEL_TEXT_COLOR), B_LIGHTEN_1_TINT));

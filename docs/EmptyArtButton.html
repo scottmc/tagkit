@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EmptyArtButton - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Drag and drop &raquo; EmptyArtButton</div>
+<div id="content">
+<h1>EmptyArtButton</h1>
+<p class="brief">A button shown in a cover art view while it has no cover.</p>
+<pre>#include "tagkit/EmptyArtButton.h"</pre>
+<h2>Detailed Description</h2>
+<p>An icon over a label on a translucent chip, drawn in the middle of the
+empty cover, such as Hare's &ldquo;Load CD&rdquo;. Pressing it posts a message
+you supply to the view's window. Whether it is shown is up to the program, so
+it can be hidden and shown again without being set up twice.</p>
+<p><a href="CoverArtView.html">CoverArtView</a> and
+<a href="CompactView.html">CompactView</a> own one and offer it as
+<code>SetEmptyButton()</code> and <code>SetEmptyButtonVisible()</code>, so a program
+rarely uses this class itself. A view of your own can own one and forward
+<code>Draw()</code>, <code>MouseDown()</code> and <code>MouseUp()</code> to it.
+In a small square the icon shrinks, and then goes away; the label is shortened
+to fit.</p>
+<h2>Member Functions</h2>
+<table>
+<tr><td><a href="#SetButton"><code>void SetButton(const char* label, BBitmap* icon, BMessage* message)</code></a><br>Sets the label, icon and message.</td></tr>
+<tr><td><a href="#SetVisible"><code>void SetVisible(bool visible)</code></a><br>Hides or shows the button.</td></tr>
+<tr><td><a href="#IsActive"><code>bool IsActive() const</code></a><br>Whether there is a button and it is visible.</td></tr>
+<tr><td><a href="#Draw"><code>void Draw(BView* view, BRect square)</code></a><br>Draws the button centered in a square.</td></tr>
+<tr><td><a href="#MouseDown"><code>bool MouseDown(BView* view, BPoint where, BRect square)</code></a><br>Handles a press.</td></tr>
+<tr><td><a href="#MouseUp"><code>bool MouseUp(BView* view, BPoint where, BRect square)</code></a><br>Handles the release, posting the message.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="SetButton"><code>void SetButton(const char* label, BBitmap* icon, BMessage* message)</code></h3>
+<p class="brief">Sets the label, icon and message.</p>
+<p>The icon (<code>NULL</code> for none) is drawn at up to 32 &times; 32. Takes ownership of <code>icon</code> and <code>message</code>. A <code>NULL</code> message removes the button. The button starts out visible.</p>
+</div>
+<div class="member"><h3 id="SetVisible"><code>void SetVisible(bool visible)</code></h3>
+<p class="brief">Hides or shows the button.</p>
+<p>The button is kept while hidden.</p>
+</div>
+<div class="member"><h3 id="IsActive"><code>bool IsActive() const</code></h3>
+<p class="brief">Whether there is a button and it is visible.</p>
+</div>
+<div class="member"><h3 id="Draw"><code>void Draw(BView* view, BRect square)</code></h3>
+<p class="brief">Draws the button centered in a square.</p>
+<p>The square is in the view's coordinates and the view's font is used. Does nothing unless <code>IsActive()</code>. Call it after drawing the background.</p>
+</div>
+<div class="member"><h3 id="MouseDown"><code>bool MouseDown(BView* view, BPoint where, BRect square)</code></h3>
+<p class="brief">Handles a press.</p>
+<p>For a primary-button press. Returns <code>true</code> if it landed on the button, which is then tracked until the release.</p>
+</div>
+<div class="member"><h3 id="MouseUp"><code>bool MouseUp(BView* view, BPoint where, BRect square)</code></h3>
+<p class="brief">Handles the release, posting the message.</p>
+<p>Returns <code>true</code> if a press on the button was being tracked. The message is posted to the view's window only if the pointer is still on the button.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>
