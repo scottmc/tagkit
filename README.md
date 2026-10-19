@@ -21,6 +21,8 @@ repository (with its history) so other programs, such as Hare, can share it.
 - `CompactView`, `CoverArtView`, `CoverArtCandidatesView`,
   `CoverArtDragDrop`, `EmptyArtButton`, `FieldEditorWindow`, `TagView`,
   `RecordingMatchView` -- views.
+- `PendingEdits` -- remembers hand edits to rows until they are applied or
+  discarded, for any kind of list.
 - `GenreList`, `ClientInfo` -- the genre names, and the User-Agent that web
   services get told (the program using TagKit supplies its own name).
 

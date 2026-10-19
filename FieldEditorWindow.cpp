@@ -25,6 +25,9 @@
 #include <TextControl.h>
 #include <TextView.h>
 
+#include "GenreList.h"
+#include "TagRecord.h"
+
 
 namespace tagkit {
 
@@ -326,6 +329,23 @@ FieldEditorWindow::_BuildChoiceMenu(BMenu* menu,
 		new BMessage(kMsgFieldEditorOther)));
 
 	menu->SetTargetForItems(this);
+}
+
+
+FieldEditorWindow*
+new_field_editor(BMessenger target, const BMessage& result, tag_field field,
+	const std::vector<const TagRecord*>& records, BPoint screenPosition,
+	float width, const std::vector<BString>* recentGenres)
+{
+	// If the files disagree the editor starts out blank (and knows not to
+	// accept that blank when the user just clicks away).
+	bool mixed = false;
+	BString value = common_tag_field_value(records, field, &mixed);
+
+	bool isGenre = field == TAG_FIELD_GENRE;
+	return new FieldEditorWindow(target, result, tag_field_label(field),
+		value.String(), screenPosition, width,
+		isGenre ? &genre_names() : NULL, isGenre ? recentGenres : NULL, mixed);
 }
 
 

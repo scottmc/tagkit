@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PendingEdits - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Data model &raquo; PendingEdits</div>
+<div id="content">
+<h1>PendingEdits</h1>
+<p class="brief">Remembers hand edits to rows until they are applied or discarded.</p>
+<pre>#include "tagkit/PendingEdits.h"</pre>
+<h2>Detailed Description</h2>
+<p>Keeps track of hand edits to the tags of rows in a list, from the moment they are made until the user either keeps them (Apply) or takes them back (Discard Changes): each row's record as it was before its first edit is remembered, so the edit can be undone.</p>
+<p>The rows belong to the program, whatever kind it uses (a <a href="TagView.html">TagView</a>'s rows, Hare's rows), so the class only knows them as opaque pointers and asks an <code>EditHost</code> to read and show their records. It does no drawing and has no windows; the program decides when to call it (from a <a href="FieldEditorWindow.html">FieldEditorWindow</a>'s result, say) and keeps its Apply and Discard buttons in step with <code>HasPending()</code>. Needs only <code>be</code>.</p>
+<h2>EditHost</h2>
+<p>What PendingEdits needs from the program that owns the rows. Derive from it and implement:</p>
+<table>
+<tr><td><code>bool EditRowExists(void* row)</code><br>Whether the row is still in the list (it may have been removed while an editor was open).</td></tr>
+<tr><td><code>TagRecord EditRowRecord(void* row)</code><br>The record the row currently shows.</td></tr>
+<tr><td><code>void EditSetRowRecord(void* row, const TagRecord&amp; record)</code><br>Makes the row show the record, and hold it, so it is what gets saved.</td></tr>
+</table>
+<h2>Member Functions</h2>
+<table>
+<tr><td><a href="#PendingEdits_ctor"><code>PendingEdits(EditHost* host)</code></a><br>Creates the tracker.</td></tr>
+<tr><td><a href="#SetField"><code>int32 SetField(const std::vector&lt;void*&gt;&amp; rows, tag_field field, const BString&amp; value)</code></a><br>Sets a field in several rows.</td></tr>
+<tr><td><a href="#HasPending"><code>bool HasPending() const</code></a><br>Whether there is anything to apply or discard.</td></tr>
+<tr><td><a href="#Count"><code>int32 Count() const</code></a><br>How many rows have edits.</td></tr>
+<tr><td><a href="#Apply"><code>int32 Apply()</code></a><br>Keeps the edits.</td></tr>
+<tr><td><a href="#Discard"><code>int32 Discard()</code></a><br>Puts the rows back as they were.</td></tr>
+<tr><td><a href="#Forget"><code>void Forget(void* row)</code></a><br>Forgets a row that is going away.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="PendingEdits_ctor"><code>PendingEdits(EditHost* host)</code></h3>
+<p class="brief">Creates the tracker.</p>
+<p>The host must outlive it.</p>
+</div>
+<div class="member"><h3 id="SetField"><code>int32 SetField(const std::vector&lt;void*&gt;&amp; rows, tag_field field, const BString&amp; value)</code></h3>
+<p class="brief">Sets a field in several rows.</p>
+<p>Sets the field in every one of <code>rows</code> that still exists, marking their records modified and remembering how each row was before its first edit. A row the value would not change is left alone.</p>
+<h4>Returns</h4><p class="param">How many rows changed, or <code>-1</code> if the value isn't acceptable for the field (see <a href="TagField.html#set_tag_field_value">set_tag_field_value()</a>), in which case nothing was changed.</p>
+</div>
+<div class="member"><h3 id="HasPending"><code>bool HasPending() const</code></h3>
+<p class="brief">Whether there is anything to apply or discard.</p>
+</div>
+<div class="member"><h3 id="Count"><code>int32 Count() const</code></h3>
+<p class="brief">How many rows have edits.</p>
+</div>
+<div class="member"><h3 id="Apply"><code>int32 Apply()</code></h3>
+<p class="brief">Keeps the edits.</p>
+<p>The rows already show them, so this just forgets how they were.</p>
+<h4>Returns</h4><p class="param">How many rows had edits.</p>
+</div>
+<div class="member"><h3 id="Discard"><code>int32 Discard()</code></h3>
+<p class="brief">Puts the rows back as they were.</p>
+<p>Rows that no longer exist are skipped.</p>
+<h4>Returns</h4><p class="param">How many rows had edits.</p>
+</div>
+<div class="member"><h3 id="Forget"><code>void Forget(void* row)</code></h3>
+<p class="brief">Forgets a row that is going away.</p>
+<p>Without touching the row.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>

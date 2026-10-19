@@ -20,6 +20,8 @@
 #include <String.h>
 #include <Window.h>
 
+#include "TagField.h"
+
 class BGroupLayout;
 class BMenu;
 class BMenuField;
@@ -107,6 +109,19 @@ private:
 			bool				fMixed;
 			bool				fFinished;	// accepted or cancelled already
 };
+
+
+// Makes the editor for one field of one or more files -- what a program
+// does when the user right-clicks a field. Fills in the label, the current
+// value (blank, with mixed set, if the files disagree), the drop-down of
+// genres for the Genre field and the mixed flag, so the programs using it
+// all behave the same. recentGenres (may be NULL) heads the genre menu.
+// Call Show() on the result.
+FieldEditorWindow*	new_field_editor(BMessenger target, const BMessage& result,
+						tag_field field,
+						const std::vector<const TagRecord*>& records,
+						BPoint screenPosition, float width,
+						const std::vector<BString>* recentGenres = NULL);
 
 } // namespace tagkit
 

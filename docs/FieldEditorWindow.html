@@ -21,6 +21,10 @@
 <table>
 <tr><td><a href="#FieldEditorWindow_ctor"><code>FieldEditorWindow(BMessenger target, const BMessage&amp; result, const char* label, const char* initialText, BPoint screenPosition, float width, const std::vector&lt;BString&gt;* choices, const std::vector&lt;BString&gt;* recent, bool mixed)</code></a><br>Creates the window (not yet shown).</td></tr>
 </table>
+<h2>Functions</h2>
+<table>
+<tr><td><a href="#new_field_editor"><code>FieldEditorWindow* new_field_editor(...)</code></a><br>Makes the editor for one field of one or more files.</td></tr>
+</table>
 <h2>Documentation</h2>
 <div class="member"><h3 id="FieldEditorWindow_ctor"><code>FieldEditorWindow(BMessenger target, const BMessage&amp; result, const char* label, const char* initialText, BPoint screenPosition, float width, const std::vector&lt;BString&gt;* choices = NULL, const std::vector&lt;BString&gt;* recent = NULL, bool mixed = false)</code></h3>
 <p class="brief">Creates the window (not yet shown).</p>
@@ -36,6 +40,10 @@
 <dt><code>mixed</code></dt><dd><code>true</code> if the value stands for several files that differ; see above.</dd>
 </dl>
 <p>Call <code>Show()</code> to open it.</p>
+</div>
+<div class="member"><h3 id="new_field_editor"><code>FieldEditorWindow* new_field_editor(BMessenger target, const BMessage&amp; result, tag_field field, const std::vector&lt;const TagRecord*&gt;&amp; records, BPoint screenPosition, float width, const std::vector&lt;BString&gt;* recentGenres = NULL)</code></h3>
+<p class="brief">Makes the editor for one field of one or more files.</p>
+<p>What a program does when the user right-clicks a field. It fills in the label, the current value (blank, with <code>mixed</code> set, if the files disagree), the drop-down of <a href="GenreList.html">genres</a> for the Genre field, and the mixed flag, so every program using it behaves the same. <code>recentGenres</code> (may be <code>NULL</code>) heads the genre menu. Call <code>Show()</code> on the result.</p>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>
