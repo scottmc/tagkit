@@ -18,9 +18,10 @@
 ##	DEFINES = TAGKIT_CLIENT_NAME=MyApp TAGKIT_CLIENT_VERSION=1.0 \
 ##		TAGKIT_CLIENT_CONTACT=example.org/myapp
 ##
-## Add TAGKIT_USE_CATALOG to DEFINES if the app has a Haiku catalog and should
-## translate TagKit's own words too (see TagKitStrings.h); `make catkeys` then
-## collects them along with the app's own, under the context "TagKit".
+## Add TAGKIT_USE_CATALOG to DEFINES, and $(TAGKIT_CATALOG_LIBS) to LIBS, if the
+## app has a Haiku catalog and should translate TagKit's own words too (see
+## TagKitStrings.h); `make catkeys` then collects them along with the app's
+## own, under the context "TagKit".
 ##
 ## and include TagKit's headers as #include "tagkit/CompactView.h".
 ##
@@ -57,6 +58,10 @@ TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
 
 # Libraries TagKit links against (add "be" yourself).
 TAGKIT_LIBS = tag translation tracker columnlistview musicbrainz5 coverart
+
+# Also needed, after TAGKIT_LIBS, if the app defines TAGKIT_USE_CATALOG: the
+# static stub that lets a program use catalogs (what B_TRANSLATE needs).
+TAGKIT_CATALOG_LIBS = localestub
 
 # Headers: TagKit's own include each other by their plain names, so the app
 # only needs the directory that CONTAINS the tagkit folder.

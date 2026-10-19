@@ -15,7 +15,9 @@
 <h2>Detailed Description</h2>
 <p>TagKit's own words &mdash; column titles, field names, buttons, window titles, the &ldquo;(multiple)&rdquo; shown for files that disagree &mdash; are English by default, and nothing needs any library for that. A program that has a Haiku catalog (a Locale Kit one) defines <code>TAGKIT_USE_CATALOG</code> when it builds, in <code>DEFINES</code> next to the <code>TAGKIT_CLIENT_*</code> ones:</p>
 <pre>DEFINES = TAGKIT_CLIENT_NAME=MyApp TAGKIT_CLIENT_VERSION=1.0 \
-	TAGKIT_USE_CATALOG</pre>
+	TAGKIT_USE_CATALOG
+LIBS = $(STDCPPLIBS) be $(TAGKIT_LIBS) $(TAGKIT_CATALOG_LIBS)</pre>
+<p>(<code>TAGKIT_CATALOG_LIBS</code> is <code>localestub</code>, the static library every program that uses <code>B_TRANSLATE</code> links; without it the link fails with undefined references to <code>BLocaleRoster::GetCatalog()</code>.)</p>
 <p>Every string in TagKit then goes through <code>B_TRANSLATE_CONTEXT()</code> with the context <code>"TagKit"</code>:</p>
 <ul>
 <li>The program's own catalog is searched for them at run time, so there is nothing to set up in the code; only the catalog.</li>

@@ -23,7 +23,9 @@
 //     source files as it does the program's own, because TagKit is compiled
 //     into the program, so they land in the program's .catkeys file under
 //     the context "TagKit".
-// A string without a translation is shown in English. The words a program
+// A string without a translation is shown in English. Link the static
+// "localestub" library as well (tagkit.mk's TAGKIT_CATALOG_LIBS), which every
+// program using B_TRANSLATE needs. The words a program
 // gives TagKit itself (an EmptyArtButton's label, say) are the program's to
 // translate.
 //
