@@ -21,6 +21,7 @@
 #include <StringView.h>
 
 #include "CoverArtCandidatesView.h"
+#include "TagKitStrings.h"
 
 
 namespace tagkit {
@@ -37,11 +38,12 @@ CoverArtPickerWindow::CoverArtPickerWindow(BMessenger target,
 	const BString& fileName, const std::vector<CoverArtImage>& images)
 	:
 	BWindow(BRect(180, 180, 180 + kWindowWidth, 180 + kWindowHeight),
-		"Choose Cover Art", B_TITLED_WINDOW,
+		TAGKIT_TR("Choose Cover Art"), B_TITLED_WINDOW,
 			B_ASYNCHRONOUS_CONTROLS | B_AUTO_UPDATE_SIZE_LIMITS),
 	fTarget(target)
 {
-	fPromptText << "Cover art for \"" << fileName << "\"";
+	fPromptText = fill_in(TAGKIT_TR("Cover art for \"%file%\""), "%file%",
+		fileName.String());
 	fPromptView = new BStringView("prompt", "");
 	fPromptView->SetText(fPromptText.String());
 
@@ -71,9 +73,9 @@ CoverArtPickerWindow::CoverArtPickerWindow(BMessenger target,
 
 	fCaptionView = new BStringView("caption", "");
 
-	BButton* cancelButton = new BButton("cancel", "Cancel",
+	BButton* cancelButton = new BButton("cancel", TAGKIT_TR("Cancel"),
 		new BMessage(B_QUIT_REQUESTED));
-	BButton* useButton = new BButton("use", "Use Selected Cover",
+	BButton* useButton = new BButton("use", TAGKIT_TR("Use Selected Cover"),
 		new BMessage(kMsgCoverArtPickerChosen));
 	useButton->MakeDefault(true);
 
@@ -155,7 +157,10 @@ CoverArtPickerWindow::SetLoading(bool loading)
 		return;
 
 	BString text(fPromptText);
-	text << (loading ? " (still looking" B_UTF8_ELLIPSIS ")" : ":");
+	if (loading)
+		text << " " << TAGKIT_TR("(still looking" B_UTF8_ELLIPSIS ")");
+	else
+		text << ":";
 	fPromptView->SetText(text.String());
 }
 

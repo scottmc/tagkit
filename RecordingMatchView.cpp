@@ -9,6 +9,7 @@
 #include "RecordingMatchView.h"
 
 #include "OptionalIntegerColumn.h"
+#include "TagKitStrings.h"
 
 #include <stdio.h>
 
@@ -73,16 +74,18 @@ RecordingMatchView::~RecordingMatchView()
 void
 RecordingMatchView::_InitColumns()
 {
-	AddColumn(new BStringColumn("Artist", 160, 60, 400, B_TRUNCATE_END),
-		kColumnArtist);
-	AddColumn(new BStringColumn("Title", 200, 60, 400, B_TRUNCATE_END),
-		kColumnTitle);
-	AddColumn(new BStringColumn("Album", 180, 60, 400, B_TRUNCATE_END),
-		kColumnAlbum);
-	AddColumn(new OptionalIntegerColumn("Track", 50, 30, 80), kColumnTrack);
-	AddColumn(new OptionalIntegerColumn("Year", 55, 30, 80), kColumnYear);
-	AddColumn(new BStringColumn("Duration", 70, 50, 100, B_TRUNCATE_END,
-		B_ALIGN_RIGHT), kColumnDuration);
+	AddColumn(new BStringColumn(TAGKIT_TR("Artist"), 160, 60, 400,
+		B_TRUNCATE_END), kColumnArtist);
+	AddColumn(new BStringColumn(TAGKIT_TR("Title"), 200, 60, 400,
+		B_TRUNCATE_END), kColumnTitle);
+	AddColumn(new BStringColumn(TAGKIT_TR("Album"), 180, 60, 400,
+		B_TRUNCATE_END), kColumnAlbum);
+	AddColumn(new OptionalIntegerColumn(TAGKIT_TR("Track"), 50, 30, 80),
+		kColumnTrack);
+	AddColumn(new OptionalIntegerColumn(TAGKIT_TR("Year"), 55, 30, 80),
+		kColumnYear);
+	AddColumn(new BStringColumn(TAGKIT_TR("Duration"), 70, 50, 100,
+		B_TRUNCATE_END, B_ALIGN_RIGHT), kColumnDuration);
 }
 
 

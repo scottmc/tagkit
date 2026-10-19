@@ -17,6 +17,7 @@
 #include <Window.h>
 
 #include "EmptyArtButton.h"
+#include "TagKitStrings.h"
 
 
 namespace tagkit {
@@ -195,7 +196,7 @@ CoverArtView::Draw(BRect updateRect)
 		return;
 	}
 
-	const char* label = "No cover art";
+	const char* label = TAGKIT_TR("No cover art");
 	SetHighColor(tint_color(ui_color(B_PANEL_TEXT_COLOR), B_LIGHTEN_1_TINT));
 	font_height fontHeight;
 	GetFontHeight(&fontHeight);

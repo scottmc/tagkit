@@ -26,6 +26,7 @@
 #include <TextView.h>
 
 #include "GenreList.h"
+#include "TagKitStrings.h"
 #include "TagRecord.h"
 
 
@@ -39,7 +40,7 @@ FieldEditorWindow::FieldEditorWindow(BMessenger target, const BMessage& result,
 	float width, const std::vector<BString>* choices,
 	const std::vector<BString>* recent, bool mixed)
 	:
-	BWindow(BRect(0, 0, 100, 50), "Edit", B_TITLED_WINDOW_LOOK,
+	BWindow(BRect(0, 0, 100, 50), TAGKIT_TR("Edit"), B_TITLED_WINDOW_LOOK,
 		B_NORMAL_WINDOW_FEEL,
 		B_NOT_RESIZABLE | B_NOT_ZOOMABLE | B_NOT_MINIMIZABLE
 			| B_AUTO_UPDATE_SIZE_LIMITS | B_ASYNCHRONOUS_CONTROLS),
@@ -55,9 +56,7 @@ FieldEditorWindow::FieldEditorWindow(BMessenger target, const BMessage& result,
 	fMixed(mixed),
 	fFinished(false)
 {
-	BString title("Edit ");
-	title << label;
-	SetTitle(title.String());
+	SetTitle(fill_in(TAGKIT_TR("Edit %field%"), "%field%", label).String());
 
 	BString controlLabel(label);
 	controlLabel << ":";
@@ -271,7 +270,7 @@ FieldEditorWindow::_BuildChoiceMenu(BMenu* menu,
 
 	BMessage* noneMessage = new BMessage(kMsgFieldEditorPick);
 	noneMessage->AddString("value", "");
-	BMenuItem* none = new BMenuItem("(none)", noneMessage);
+	BMenuItem* none = new BMenuItem(TAGKIT_TR("(none)"), noneMessage);
 	menu->AddItem(none);
 	if (current.Length() == 0) {
 		none->SetMarked(true);
@@ -325,7 +324,7 @@ FieldEditorWindow::_BuildChoiceMenu(BMenu* menu,
 
 	// For a value that isn't in any list.
 	menu->AddSeparatorItem();
-	menu->AddItem(new BMenuItem("Other" B_UTF8_ELLIPSIS,
+	menu->AddItem(new BMenuItem(TAGKIT_TR("Other" B_UTF8_ELLIPSIS),
 		new BMessage(kMsgFieldEditorOther)));
 
 	menu->SetTargetForItems(this);

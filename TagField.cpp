@@ -8,6 +8,8 @@
  */
 #include "TagField.h"
 
+#include "TagKitStrings.h"
+
 #include <stdlib.h>
 
 
@@ -42,13 +44,13 @@ const char*
 tag_field_label(tag_field field)
 {
 	switch (field) {
-		case TAG_FIELD_ARTIST:	return "Artist";
-		case TAG_FIELD_TITLE:	return "Title";
-		case TAG_FIELD_ALBUM:	return "Album";
-		case TAG_FIELD_TRACK:	return "Track";
-		case TAG_FIELD_YEAR:	return "Year";
-		case TAG_FIELD_GENRE:	return "Genre";
-		case TAG_FIELD_COMMENT:	return "Comment";
+		case TAG_FIELD_ARTIST:	return TAGKIT_TR("Artist");
+		case TAG_FIELD_TITLE:	return TAGKIT_TR("Title");
+		case TAG_FIELD_ALBUM:	return TAGKIT_TR("Album");
+		case TAG_FIELD_TRACK:	return TAGKIT_TR("Track");
+		case TAG_FIELD_YEAR:	return TAGKIT_TR("Year");
+		case TAG_FIELD_GENRE:	return TAGKIT_TR("Genre");
+		case TAG_FIELD_COMMENT:	return TAGKIT_TR("Comment");
 		default:				return "";
 	}
 }

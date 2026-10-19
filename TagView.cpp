@@ -9,6 +9,7 @@
 #include "TagView.h"
 
 #include "OptionalIntegerColumn.h"
+#include "TagKitStrings.h"
 
 #include <Message.h>
 #include <Window.h>
@@ -215,26 +216,26 @@ TagView::SelectionChanged()
 void
 TagView::_InitColumns()
 {
-	AddColumn(new BStringColumn("File", 160, 60, 400, B_TRUNCATE_MIDDLE),
-		kColumnFileName);
-	AddColumn(new EditableStringColumn("Artist", 140, 60, 400, B_TRUNCATE_END,
-		TAG_FIELD_ARTIST), kColumnArtist);
-	AddColumn(new EditableStringColumn("Title", 180, 60, 400, B_TRUNCATE_END,
-		TAG_FIELD_TITLE), kColumnTitle);
-	AddColumn(new EditableStringColumn("Album", 160, 60, 400, B_TRUNCATE_END,
-		TAG_FIELD_ALBUM), kColumnAlbum);
-	AddColumn(new EditableIntegerColumn("Track", 50, 30, 80, TAG_FIELD_TRACK),
-		kColumnTrack);
-	AddColumn(new EditableIntegerColumn("Year", 55, 30, 80, TAG_FIELD_YEAR),
-		kColumnYear);
-	AddColumn(new EditableStringColumn("Genre", 100, 60, 200, B_TRUNCATE_END,
-		TAG_FIELD_GENRE), kColumnGenre);
-	AddColumn(new BStringColumn("Duration", 70, 50, 100, B_TRUNCATE_END,
-		B_ALIGN_RIGHT), kColumnDuration);
-	AddColumn(new BStringColumn("Format", 80, 50, 120, B_TRUNCATE_END),
-		kColumnFormat);
-	AddColumn(new BStringColumn("Cover", 55, 40, 100, B_TRUNCATE_END),
-		kColumnCover);
+	AddColumn(new BStringColumn(TAGKIT_TR("File"), 160, 60, 400,
+		B_TRUNCATE_MIDDLE), kColumnFileName);
+	AddColumn(new EditableStringColumn(TAGKIT_TR("Artist"), 140, 60, 400,
+		B_TRUNCATE_END, TAG_FIELD_ARTIST), kColumnArtist);
+	AddColumn(new EditableStringColumn(TAGKIT_TR("Title"), 180, 60, 400,
+		B_TRUNCATE_END, TAG_FIELD_TITLE), kColumnTitle);
+	AddColumn(new EditableStringColumn(TAGKIT_TR("Album"), 160, 60, 400,
+		B_TRUNCATE_END, TAG_FIELD_ALBUM), kColumnAlbum);
+	AddColumn(new EditableIntegerColumn(TAGKIT_TR("Track"), 50, 30, 80,
+		TAG_FIELD_TRACK), kColumnTrack);
+	AddColumn(new EditableIntegerColumn(TAGKIT_TR("Year"), 55, 30, 80,
+		TAG_FIELD_YEAR), kColumnYear);
+	AddColumn(new EditableStringColumn(TAGKIT_TR("Genre"), 100, 60, 200,
+		B_TRUNCATE_END, TAG_FIELD_GENRE), kColumnGenre);
+	AddColumn(new BStringColumn(TAGKIT_TR("Duration"), 70, 50, 100,
+		B_TRUNCATE_END, B_ALIGN_RIGHT), kColumnDuration);
+	AddColumn(new BStringColumn(TAGKIT_TR("Format"), 80, 50, 120,
+		B_TRUNCATE_END), kColumnFormat);
+	AddColumn(new BStringColumn(TAGKIT_TR("Cover"), 55, 40, 100,
+		B_TRUNCATE_END), kColumnCover);
 }
 
 
@@ -321,8 +322,8 @@ TagView::_ApplyRecordToRow(TagRow* row, const TagRecord& record)
 		kColumnFormat);
 
 	// "New" = art chosen but not saved to the file yet.
-	row->SetField(new BStringField(record.newCoverArt != NULL ? "New"
-		: record.hasCoverArt ? "Yes" : ""), kColumnCover);
+	row->SetField(new BStringField(record.newCoverArt != NULL ? TAGKIT_TR("New")
+		: record.hasCoverArt ? TAGKIT_TR("Yes") : ""), kColumnCover);
 }
 
 

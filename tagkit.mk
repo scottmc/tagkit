@@ -18,6 +18,10 @@
 ##	DEFINES = TAGKIT_CLIENT_NAME=MyApp TAGKIT_CLIENT_VERSION=1.0 \
 ##		TAGKIT_CLIENT_CONTACT=example.org/myapp
 ##
+## Add TAGKIT_USE_CATALOG to DEFINES if the app has a Haiku catalog and should
+## translate TagKit's own words too (see TagKitStrings.h); `make catkeys` then
+## collects them along with the app's own, under the context "TagKit".
+##
 ## and include TagKit's headers as #include "tagkit/CompactView.h".
 ##
 ## Note that the Haiku makefile-engine puts every object file in one

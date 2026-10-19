@@ -25,6 +25,8 @@ repository (with its history) so other programs, such as Hare, can share it.
   discarded, for any kind of list.
 - `GenreList`, `ClientInfo` -- the genre names, and the User-Agent that web
   services get told (the program using TagKit supplies its own name).
+- `TagKitStrings` -- TagKit's own words, translatable through the using
+  program's Haiku catalog (opt in with `TAGKIT_USE_CATALOG`).
 
 Everything is in the `tagkit` C++ namespace. Reference documentation is in
 [`docs/index.html`](docs/index.html).

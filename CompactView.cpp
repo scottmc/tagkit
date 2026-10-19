@@ -26,6 +26,7 @@
 #include "CoverArtDragDrop.h"
 #include "EmptyArtButton.h"
 #include "TagField.h"
+#include "TagKitStrings.h"
 #include "TagRecord.h"
 
 
@@ -56,8 +57,23 @@ const float kMinInfoRatio = 1.0f;
 const float kMaxInfoRatio = 2.0f;
 
 // Shown in place of a field's value when the files of a multiple selection
-// don't all have the same one.
-const char* const kMixedValue = "(multiple)";
+// don't all have the same one. (A function, not a constant, so the
+// translation is looked up when needed, not when the program starts.)
+BString
+MixedValue()
+{
+	return BString(TAGKIT_TR("(multiple)"));
+}
+
+
+// A row's label: the field's (translated) name and a colon.
+BString
+RowLabel(const char* name)
+{
+	BString label(name);
+	label << ":";
+	return label;
+}
 
 
 struct InfoRow {
@@ -292,20 +308,29 @@ private:
 
 		if (fRecords.size() == 1) {
 			const TagRecord* record = &fRecords[0];
-			_AddRow("Artist:", record->artist, TAG_FIELD_ARTIST);
-			_AddRow("Title:", record->title, TAG_FIELD_TITLE);
-			_AddRow("Album:", record->album, TAG_FIELD_ALBUM);
-			_AddRow("Track:", FormatPositive(record->track), TAG_FIELD_TRACK);
-			_AddRow("Year:", FormatPositive(record->year), TAG_FIELD_YEAR);
-			_AddRow("Genre:", record->genre, TAG_FIELD_GENRE);
-			if (fShowComment)
-				_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_ARTIST)), record->artist,
+				TAG_FIELD_ARTIST);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_TITLE)), record->title,
+				TAG_FIELD_TITLE);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_ALBUM)), record->album,
+				TAG_FIELD_ALBUM);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_TRACK)),
+				FormatPositive(record->track), TAG_FIELD_TRACK);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_YEAR)),
+				FormatPositive(record->year), TAG_FIELD_YEAR);
+			_AddRow(RowLabel(tag_field_label(TAG_FIELD_GENRE)), record->genre,
+				TAG_FIELD_GENRE);
+			if (fShowComment) {
+				_AddRow(RowLabel(tag_field_label(TAG_FIELD_COMMENT)),
+					record->comment, TAG_FIELD_COMMENT);
+			}
 			if (fShowDuration) {
-				_AddRow("Duration:", FormatDuration(record->durationSeconds),
-					-1);
+				_AddRow(RowLabel(TAGKIT_TR("Duration")),
+					FormatDuration(record->durationSeconds), -1);
 			}
 			if (fShowFormat) {
-				_AddRow("Format:", BString(format_label(record->format)), -1);
+				_AddRow(RowLabel(TAGKIT_TR("Format")),
+					BString(format_label(record->format)), -1);
 			}
 		} else if (fRecords.size() > 1) {
 			std::vector<const TagRecord*> pointers;
@@ -326,10 +351,8 @@ private:
 				BString value = common_tag_field_value(pointers, kFields[i],
 					&mixed);
 
-				BString label(tag_field_label(kFields[i]));
-				label << ":";
-				_AddRow(label.String(), mixed ? BString(kMixedValue) : value,
-					kFields[i]);
+				_AddRow(RowLabel(tag_field_label(kFields[i])),
+					mixed ? MixedValue() : value, kFields[i]);
 			}
 
 			// Duration is different for nearly every file; Format is worth
@@ -342,15 +365,15 @@ private:
 				}
 			}
 			if (sameFormat && fShowFormat) {
-				_AddRow("Format:", BString(format_label(fRecords[0].format)),
-					-1);
+				_AddRow(RowLabel(TAGKIT_TR("Format")),
+					BString(format_label(fRecords[0].format)), -1);
 			}
 		}
 
 		Invalidate();
 	}
 
-	void _AddRow(const char* label, const BString& value, int32 field)
+	void _AddRow(const BString& label, const BString& value, int32 field)
 	{
 		InfoRow row;
 		row.label = label;
@@ -431,7 +454,7 @@ private:
 
 	void _DrawPlaceholder(BRect bounds)
 	{
-		const char* label = "No file selected";
+		const char* label = TAGKIT_TR("No file selected");
 		BFont font(be_plain_font);
 		SetFont(&font);
 		SetHighColor(tint_color(ui_color(B_DOCUMENT_TEXT_COLOR),
@@ -804,8 +827,7 @@ CompactView::SetRecords(const std::vector<const TagRecord*>& records)
 	if (records.size() == 1) {
 		fFileName = records[0]->fileName;
 	} else if (records.size() > 1) {
-		fFileName = "";
-		fFileName << (int32)records.size() << " files selected";
+		fFileName = files_selected_text((int32)records.size());
 	} else {
 		fFileName = BString();
 	}
