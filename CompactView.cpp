@@ -143,6 +143,7 @@ public:
 		fOwner(owner),
 		fShowDuration(true),
 		fShowFormat(true),
+		fShowComment(true),
 		fTextScale(1.0f)
 	{
 		SetViewColor(B_TRANSPARENT_COLOR);
@@ -176,6 +177,14 @@ public:
 	{
 		if (show != fShowDuration) {
 			fShowDuration = show;
+			_Rebuild();
+		}
+	}
+
+	void SetShowComment(bool show)
+	{
+		if (show != fShowComment) {
+			fShowComment = show;
 			_Rebuild();
 		}
 	}
@@ -288,7 +297,8 @@ private:
 			_AddRow("Track:", FormatPositive(record->track), TAG_FIELD_TRACK);
 			_AddRow("Year:", FormatPositive(record->year), TAG_FIELD_YEAR);
 			_AddRow("Genre:", record->genre, TAG_FIELD_GENRE);
-			_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
+			if (fShowComment)
+				_AddRow("Comment:", record->comment, TAG_FIELD_COMMENT);
 			if (fShowDuration) {
 				_AddRow("Duration:", FormatDuration(record->durationSeconds),
 					-1);
@@ -308,6 +318,9 @@ private:
 				TAG_FIELD_COMMENT
 			};
 			for (size_t i = 0; i < sizeof(kFields) / sizeof(kFields[0]); i++) {
+				if (kFields[i] == TAG_FIELD_COMMENT && !fShowComment)
+					continue;
+
 				bool mixed = false;
 				BString value = common_tag_field_value(pointers, kFields[i],
 					&mixed);
@@ -436,6 +449,7 @@ private:
 	std::vector<TagRecord>	fRecords;
 	bool					fShowDuration;
 	bool					fShowFormat;
+	bool					fShowComment;
 	float					fTextScale;
 };
 
@@ -634,6 +648,13 @@ void
 CompactView::SetShowDuration(bool show)
 {
 	fInfoSquare->SetShowDuration(show);
+}
+
+
+void
+CompactView::SetShowComment(bool show)
+{
+	fInfoSquare->SetShowComment(show);
 }
 
 

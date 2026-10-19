@@ -32,6 +32,7 @@ the window, with details added; the window decides what to do.</p>
 <tr><td><a href="#SetRecord"><code>void SetRecord(const TagRecord* record)</code></a><br>Shows a record's tag fields.</td></tr>
 <tr><td><a href="#SetShowDuration"><code>void SetShowDuration(bool show)</code></a><br>Shows or hides the Duration row.</td></tr>
 <tr><td><a href="#SetShowFormat"><code>void SetShowFormat(bool show)</code></a><br>Shows or hides the Format row.</td></tr>
+<tr><td><a href="#SetShowComment"><code>void SetShowComment(bool show)</code></a><br>Shows or hides the Comment row.</td></tr>
 <tr><td><a href="#SetInfoWidthRatio"><code>void SetInfoWidthRatio(float ratio)</code></a><br>Makes the tag square wider than the cover art.</td></tr>
 <tr><td><a href="#InfoWidthRatio"><code>float InfoWidthRatio() const</code></a><br>The current ratio.</td></tr>
 <tr><td><a href="#SetMinimumViewSize"><code>void SetMinimumViewSize(float width, float height)</code></a><br>Sets the smallest size the view asks its layout for.</td></tr>
@@ -65,6 +66,10 @@ the window, with details added; the window decides what to do.</p>
 <div class="member"><h3 id="SetShowFormat"><code>void SetShowFormat(bool show)</code></h3>
 <p class="brief">Shows or hides the Format row.</p>
 <p>Shown by default. With several files selected it is shown only when they all share a format.</p>
+</div>
+<div class="member"><h3 id="SetShowComment"><code>void SetShowComment(bool show)</code></h3>
+<p class="brief">Shows or hides the Comment row.</p>
+<p>Shown by default. Comments are often long, so a program with little room may want to hide them; a hidden row can't be right-clicked to edit.</p>
 </div>
 <div class="member"><h3 id="SetInfoWidthRatio"><code>void SetInfoWidthRatio(float ratio)</code></h3>
 <p class="brief">Makes the tag square wider than the cover art.</p>

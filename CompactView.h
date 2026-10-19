@@ -65,6 +65,7 @@ public:
 	// files selected Duration is never shown, and Format only if they share it.
 			void				SetShowDuration(bool show);
 			void				SetShowFormat(bool show);
+			void				SetShowComment(bool show);
 
 	// How wide the tag square is compared to the (square) cover art, 1.0 to
 	// 2.0; the default is 1.0, two equal squares. A wider tag square gives
