@@ -100,6 +100,9 @@ struct TagRecord {
 								// MusicBrainz match was applied) but not
 								// yet written to the file
 	bool		hasCoverArt;		// the file already has embedded art
+	bool		writable;		// the file's tags can be saved; false for
+								// a file on a read-only volume or without
+								// write permission (see FileAccess.h)
 
 	// Cover art chosen to be written into the file on the next save, or
 	// NULL for "leave the file's art alone". Shared (not copied) between

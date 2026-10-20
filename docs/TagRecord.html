@@ -56,6 +56,7 @@ string.</p>
 <tr><td><a href="#tagsLoaded"><code>bool tagsLoaded</code></a><br><code>true</code> once a reader has filled the record in.</td></tr>
 <tr><td><a href="#modified"><code>bool modified</code></a><br>The tag fields were changed in memory (for example a MusicBrainz match was applied) but not yet written to the file.</td></tr>
 <tr><td><a href="#hasCoverArt"><code>bool hasCoverArt</code></a><br>The file already has embedded art.</td></tr>
+<tr><td><a href="#writable"><code>bool writable</code></a><br>The file's tags can be saved.</td></tr>
 <tr><td><a href="#newCoverArt"><code>std::shared_ptr&lt;const CoverArtImage&gt; newCoverArt</code></a><br>Cover art to write into the file on the next save, or <code>NULL</code> to leave the file's art alone.</td></tr>
 <tr><td><a href="#removeCoverArt"><code>bool removeCoverArt</code></a><br>The user removed the file's cover art; the next save deletes the embedded pictures.</td></tr>
 </table>
@@ -206,6 +207,10 @@ untagged file, not a reliable parse.</p>
 </div>
 <div class="member"><h3 id="modified"><code>bool modified</code></h3>
 <p class="brief">The tag fields were changed in memory (for example a MusicBrainz match was applied) but not yet written to the file.</p>
+</div>
+<div class="member"><h3 id="writable"><code>bool writable</code></h3>
+<p class="brief">The file's tags can be saved.</p>
+<p>Set by <code>read_tags()</code> from <a href="FileAccess.html">check_file_writable()</a>: <code>false</code> for a file on a read-only volume or one the user may not write to. <a href="TagView.html">TagView</a> adds &ldquo;(read-only)&rdquo; to such a file's name. <code>true</code> until the file has been read.</p>
 </div>
 <div class="member"><h3 id="hasCoverArt"><code>bool hasCoverArt</code></h3>
 <p class="brief">The file already has embedded art.</p>

@@ -307,6 +307,8 @@ TagView::_ApplyRecordToRow(TagRow* row, const TagRecord& record)
 	if (record.modified)
 		fileName << "\xE2\x80\xA2 ";
 	fileName << record.fileName;
+	if (!record.writable)
+		fileName << " " << TAGKIT_TR("(read-only)");
 	row->SetField(new BStringField(fileName), kColumnFileName);
 	row->SetField(new BStringField(record.artist), kColumnArtist);
 	row->SetField(new BStringField(record.title), kColumnTitle);

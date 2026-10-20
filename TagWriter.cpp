@@ -16,6 +16,8 @@
 #include <taglib/tstring.h>
 #include <taglib/tvariant.h>
 
+#include "FileAccess.h"
+
 
 namespace tagkit {
 
@@ -33,6 +35,15 @@ write_tags(const TagRecord& record, BString* errorMessage)
 	if (record.path.IsEmpty()) {
 		if (errorMessage != NULL)
 			*errorMessage = "no file path";
+		return false;
+	}
+
+	// Say why, in plain words, before TagLib can only fail to save.
+	file_write_problem problem = check_file_writable(record.path);
+	if (problem != FILE_WRITABLE) {
+		if (errorMessage != NULL) {
+			*errorMessage = file_write_problem_text(problem);
+		}
 		return false;
 	}
 

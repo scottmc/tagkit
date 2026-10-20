@@ -16,7 +16,9 @@
 <p><code>TagView</code> is a <code>BColumnListView</code> set up to show
 <a href="TagRecord.html">TagRecord</a>s: file name, artist, title, album, track,
 year, genre, duration, format and cover art columns. A row that has changes not
-yet written to the file is marked with a leading bullet. Other apps that want a
+yet written to the file is marked with a leading bullet, and a file whose tags
+can't be saved (<code>TagRecord::writable</code> is false) gets
+&ldquo;(read-only)&rdquo; after its name. Other apps that want a
 quick tag-listing widget can use it directly.</p>
 <p>Right-clicking the Artist, Title, Album, Track, Year or Genre cell of a row
 selects the row and posts the message given to <code>SetEditMessage()</code>.</p>

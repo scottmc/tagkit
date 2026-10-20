@@ -236,6 +236,7 @@ TagRecord::TagRecord()
 	tagsLoaded(false),
 	modified(false),
 	hasCoverArt(false),
+	writable(true),
 	removeCoverArt(false)
 {
 }

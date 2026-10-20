@@ -18,6 +18,8 @@
 #include <taglib/tstringlist.h>
 #include <taglib/tvariant.h>
 
+#include "FileAccess.h"
+
 
 namespace tagkit {
 
@@ -37,6 +39,9 @@ read_tags(TagRecord& record)
 {
 	if (record.path.IsEmpty())
 		return false;
+
+	// Whether a save could work, even if the tags can't be read.
+	record.writable = check_file_writable(record.path) == FILE_WRITABLE;
 
 	TagLib::FileRef file(record.path.String());
 	if (file.isNull())

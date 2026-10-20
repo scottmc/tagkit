@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FileAccess - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Reading and writing &raquo; FileAccess</div>
+<div id="content">
+<h1>FileAccess</h1>
+<p class="brief">Whether a file's tags can be saved, and if not, why.</p>
+<pre>#include "tagkit/FileAccess.h"</pre>
+<h2>Detailed Description</h2>
+<p>A save fails for reasons that are easy to tell the user about in advance: the file is gone, it is on a read-only volume (a CD, a mounted image), or the user may not write to it. <code>check_file_writable()</code> finds out which, without touching the file. Symbolic links are followed to the file they point to, since that is the file a save changes.</p>
+<p><a href="TagReader.html">read_tags()</a> uses it to set <a href="TagRecord.html#writable">TagRecord::writable</a>, <a href="TagView.html">TagView</a> marks such files &ldquo;(read-only)&rdquo;, and <a href="TagWriter.html">write_tags()</a> uses it to give a plain reason instead of TagLib's generic failure.</p>
+<h2>Enumerations</h2>
+<table>
+<tr><td><a href="#file_write_problem"><code>enum file_write_problem</code></a><br>Why a file can't be saved.</td></tr>
+</table>
+<h2>Functions</h2>
+<table>
+<tr><td><a href="#check_file_writable"><code>file_write_problem check_file_writable(const BString&amp; path)</code></a><br>Looks at a file and reports the problem, if any.</td></tr>
+<tr><td><a href="#file_write_problem_text"><code>const char* file_write_problem_text(file_write_problem problem)</code></a><br>A short translated reason.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="file_write_problem"><code>enum file_write_problem</code></h3>
+<p class="brief">Why a file can't be saved.</p>
+<table><tr><th>Constant</th><th>Meaning</th></tr>
+<tr><td><code>FILE_WRITABLE</code></td><td>No problem.</td></tr>
+<tr><td><code>FILE_MISSING</code></td><td>No such file, or a symbolic link that points nowhere.</td></tr>
+<tr><td><code>FILE_NOT_A_FILE</code></td><td>A folder or other non-file.</td></tr>
+<tr><td><code>FILE_READ_ONLY_VOLUME</code></td><td>The volume it is on is read-only.</td></tr>
+<tr><td><code>FILE_NO_PERMISSION</code></td><td>The user may not write to the file.</td></tr></table>
+</div>
+<div class="member"><h3 id="check_file_writable"><code>file_write_problem check_file_writable(const BString&amp; path)</code></h3>
+<p class="brief">Looks at a file and reports the problem, if any.</p>
+<p>Does not modify anything. Quick (a couple of system calls), so it is fine to call for every file in a list.</p>
+<h4>Parameters</h4><dl>
+<dt><code>path</code></dt><dd>Full path of the file.</dd>
+</dl>
+<h4>Returns</h4><p class="param"><code>FILE_WRITABLE</code> if a save should work, otherwise the first problem found.</p>
+</div>
+<div class="member"><h3 id="file_write_problem_text"><code>const char* file_write_problem_text(file_write_problem problem)</code></h3>
+<p class="brief">A short translated reason.</p>
+<p>For example &ldquo;the file is on a read-only volume&rdquo;, translated like the rest of TagKit's words (see <a href="TagKitStrings.html">TagKitStrings</a>).</p>
+<h4>Returns</h4><p class="param">The text; an empty string for <code>FILE_WRITABLE</code>.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>
