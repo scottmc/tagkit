@@ -54,6 +54,9 @@ struct RecordingMatch {
 	BString	id;			// MusicBrainz recording MBID
 	BString	title;
 	BString	artist;
+	BString	disambiguation;	// MusicBrainz's note that tells recordings with
+							// the same title apart ("live", "remastered"...),
+							// empty if it has none
 	BString	album;			// best effort: the first release this
 							// recording appears on, if any
 	int32	durationSeconds;	// -1 == unknown

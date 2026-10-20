@@ -70,9 +70,11 @@ url_encode(const BString& text)
 
 status_t
 http_get(const BString& url, std::vector<unsigned char>& data,
-	BString* errorMessage, int32 timeoutSeconds)
+	BString* errorMessage, int32 timeoutSeconds, int32* httpStatus)
 {
 	data.clear();
+	if (httpStatus != NULL)
+		*httpStatus = 0;
 
 	if (timeoutSeconds <= 0)
 		timeoutSeconds = network_timeout();
@@ -83,18 +85,21 @@ http_get(const BString& url, std::vector<unsigned char>& data,
 		return B_BAD_VALUE;
 	}
 
-	// Haiku's own curl: follows redirects (-L), fails on HTTP errors (-f),
-	// stays quiet but still reports errors (-sS, which go to stderr and
-	// are dropped). Gives up if no connection is made within the connect
-	// limit (--connect-timeout), if the transfer stalls (under 1 byte a
-	// second for --speed-time seconds), or after timeoutSeconds in all
-	// (-m).
+	// Haiku's own curl: follows redirects (-L), stays quiet but still
+	// reports errors (-sS, which go to stderr and are dropped). Gives up if
+	// no connection is made within the connect limit (--connect-timeout),
+	// if the transfer stalls (under 1 byte a second for --speed-time
+	// seconds), or after timeoutSeconds in all (-m). After the body curl
+	// prints a newline and the final HTTP status (-w), which is taken off
+	// again below -- that is how an HTTP error such as 503 is told from a
+	// failed connection.
 	int32 connectSeconds = timeoutSeconds < 10 ? timeoutSeconds : 10;
 	int32 stallSeconds = timeoutSeconds < 15 ? timeoutSeconds : 15;
-	BString command("curl -sSfL --connect-timeout ");
+	BString command("curl -sSL --connect-timeout ");
 	command << connectSeconds << " --speed-limit 1 --speed-time "
 		<< stallSeconds << " -m " << timeoutSeconds << " -A '";
-	command << tagkit::user_agent() << "' -- '" << url << "' 2>/dev/null";
+	command << tagkit::user_agent() << "' -w '\\n%{http_code}' -- '" << url
+		<< "' 2>/dev/null";
 
 	FILE* pipe = popen(command.String(), "r");
 	if (pipe == NULL) {
@@ -141,6 +146,36 @@ http_get(const BString& url, std::vector<unsigned char>& data,
 				*errorMessage << " (exit status " << exitCode << ")";
 		}
 		return B_ERROR;
+	}
+
+	// Take the "\n" and three-digit status curl added off the end.
+	size_t size = data.size();
+	int32 code = 0;
+	bool hasStatus = size >= 4 && data[size - 4] == '\n';
+	for (size_t i = size - 3; hasStatus && i < size; i++) {
+		if (data[i] < '0' || data[i] > '9')
+			hasStatus = false;
+		else
+			code = code * 10 + (data[i] - '0');
+	}
+	if (!hasStatus) {
+		data.clear();
+		if (errorMessage != NULL)
+			*errorMessage = "unreadable response";
+		return B_ERROR;
+	}
+	data.resize(size - 4);
+	if (httpStatus != NULL)
+		*httpStatus = code;
+
+	if (code < 200 || code >= 300) {
+		data.clear();
+		if (errorMessage != NULL)
+			*errorMessage << "HTTP " << code;
+
+		// 429 and 503 are how a server says "too many requests, try again
+		// in a moment" (MusicBrainz does this).
+		return (code == 429 || code == 503) ? B_BUSY : B_ERROR;
 	}
 
 	return B_OK;

@@ -31,9 +31,13 @@ namespace tagkit {
 // a successful (2xx) response; otherwise an error, with a short reason in
 // errorMessage if one is given. B_TIMED_OUT means the server couldn't be
 // reached, stalled, or took longer than timeoutSeconds in all (0, the
-// default, uses network_timeout() from NetworkTimeout.h).
+// default, uses network_timeout() from NetworkTimeout.h). B_BUSY means the
+// server answered "too many requests" (HTTP 429 or 503): wait a moment and
+// try again. If httpStatus is given it receives the final HTTP status, or 0
+// when there was no answer at all.
 status_t http_get(const BString& url, std::vector<unsigned char>& data,
-	BString* errorMessage = NULL, int32 timeoutSeconds = 0);
+	BString* errorMessage = NULL, int32 timeoutSeconds = 0,
+	int32* httpStatus = NULL);
 
 // Percent-encodes text so it can be used as a value in a URL's query (the
 // "term=..." part): everything but letters, digits and - _ . ~ becomes

@@ -13,20 +13,64 @@
 <p class="brief">Searches MusicBrainz for recordings and releases.</p>
 <pre>#include "tagkit/MusicBrainzSearch.h"</pre>
 <h2>Detailed Description</h2>
-<p>Both functions perform network I/O, so always call them from a worker
-thread, never the UI thread. Failures (network errors, malformed responses, ...)
-are swallowed rather than thrown, so a failed search looks like zero
-results.</p>
+<p>All the functions perform network I/O, so always call them from a worker
+thread, never the UI thread. <code>Search()</code> is the general one: any mix of
+artist, title, album, year, track number and comment, a page of results at a
+time, with a status that says why a search failed. <code>SearchRecording()</code>
+and <code>SearchReleases()</code> are simple forms of it for the common cases, in
+which failures (network errors, malformed responses, ...) are swallowed rather
+than reported, so a failed search looks like zero results.</p>
 <p>Requests identify the calling program; see <a href="ClientInfo.html">ClientInfo</a>.</p>
 <div class="figure"><img src="images/search-dialog.png" alt="TagView&#x27;s Search MusicBrainz dialog, which calls SearchRecording(); leaving the song blank searches for cover art with SearchReleases()."><p class="caption">TagView's Search MusicBrainz dialog, which calls SearchRecording(); leaving the song blank searches for cover art with SearchReleases().</p></div>
+<h2>Types</h2>
+<table>
+<tr><td><a href="#RecordingQuery"><code>struct RecordingQuery</code></a><br>What to look for in a recording search, and which page.</td></tr>
+<tr><td><a href="#RecordingSearchResult"><code>struct RecordingSearchResult</code></a><br>One page of results, with a status and paging information.</td></tr>
+</table>
 <h2>Class Functions</h2>
 <table>
+<tr><td><a href="#Search"><code>static RecordingSearchResult MusicBrainzSearch::Search(const RecordingQuery&amp; query)</code></a><br>Looks up one page of recordings.</td></tr>
 <tr><td><a href="#SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1, bool* timedOut = NULL)</code></a><br>Finds recordings by artist and song.</td></tr>
 <tr><td><a href="#SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25, bool* timedOut = NULL)</code></a><br>Finds releases by artist, for cover art without a song.</td></tr>
 </table>
 <h2>Documentation</h2>
+<div class="member"><h3 id="RecordingQuery"><code>struct RecordingQuery</code></h3>
+<p class="brief">What to look for in a recording search, and which page.</p>
+<p>Every text field is optional (an empty one is left out of the search), but at
+least one must be filled in.</p>
+<table>
+<tr><td><code>BString artist, title, album, year, track, comment</code></td><td>What to search for. <code>album</code> is a release the recording is on; <code>year</code> a release date such as <code>"1999"</code>; <code>track</code> the position on its disc; <code>comment</code> MusicBrainz's disambiguation note.</td></tr>
+<tr><td><code>int32 offset</code></td><td>How many results to skip, for paging. <code>0</code> starts at the beginning.</td></tr>
+<tr><td><code>int32 limit</code></td><td>How many results to ask for, 1&ndash;100; <code>0</code> means 25.</td></tr>
+<tr><td><code>int32 targetSeconds</code></td><td>If not below 0, the page is re-sorted by how close each recording's length is to this (closest first, ties keeping MusicBrainz's order, recordings with no known length last). Only that page is sorted, not the whole search. Default <code>-1</code>.</td></tr>
+<tr><td><code>bool oneRowPerRelease</code></td><td><code>false</code>: one match per recording, with the release that matches <code>album</code> (else the first) filled in and every release listed in <code>releases</code> for cover art. <code>true</code>: one match per recording <em>and</em> release &mdash; the same song on three albums gives three matches, each with that release's album, year and track and only that release in <code>releases</code>.</td></tr></table>
+</div>
+<div class="member"><h3 id="RecordingSearchResult"><code>struct RecordingSearchResult</code></h3>
+<p class="brief">One page of results, with a status and paging information.</p>
+<table>
+<tr><td><code>status_t status</code></td><td><code>B_OK</code>, or why the search failed: <code>B_TIMED_OUT</code> (a time limit ran out), <code>B_BUSY</code> (MusicBrainz said "too many requests" even after waiting and trying again), <code>B_BAD_VALUE</code> (nothing to search for) or <code>B_ERROR</code>.</td></tr>
+<tr><td><code>std::vector&lt;RecordingMatch&gt; matches</code></td><td>The page's matches (see <a href="RecordingMatch.html">RecordingMatch</a>).</td></tr>
+<tr><td><code>int32 totalCount</code></td><td>How many recordings MusicBrainz says match in all, or <code>-1</code> if unknown.</td></tr>
+<tr><td><code>int32 nextOffset</code></td><td>The <code>offset</code> to give the next query to get the following page.</td></tr>
+<tr><td><code>bool HasMore() const</code></td><td>True if there is probably another page after this one.</td></tr></table>
+</div>
+<div class="member"><h3 id="Search"><code>static RecordingSearchResult MusicBrainzSearch::Search(const RecordingQuery&amp; query)</code></h3>
+<p class="brief">Looks up one page of recordings.</p>
+<p>Each search is given <a href="NetworkTimeout.html">network_timeout()</a>
+seconds. MusicBrainz allows about one request a second; if it answers "too many
+requests" the search waits a moment and tries once more before giving up with
+<code>B_BUSY</code>. To page through the results, keep the query, set its
+<code>offset</code> to the previous result's <code>nextOffset</code>, and search
+again while <code>HasMore()</code> is true. Wait a second or so between pages.</p>
+<h4>Parameters</h4><dl>
+<dt><code>query</code></dt><dd>What to look for, and which page.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The page of results; check <code>status</code> first.</p>
+</div>
 <div class="member"><h3 id="SearchRecording"><code>static std::vector&lt;RecordingMatch&gt; MusicBrainzSearch::SearchRecording(const BString&amp; artist, const BString&amp; song, const BString&amp; album, int32 maxResults = 10, int32 targetSeconds = -1, bool* timedOut = NULL)</code></h3>
 <p class="brief">Finds recordings by artist and song.</p>
+<p>The simple form of <a href="#Search">Search()</a>: the first page only, cut
+down to <code>maxResults</code>.</p>
 <p>If <code>album</code> is given, only recordings that appear on a
 matching release come back, and that release is the one reported as each
 match's album, year and track (and listed first among its releases for cover
@@ -36,9 +80,9 @@ after among live versions and compilations.</p>
 <a href="HttpFetch.html">http_get()</a>, so each is limited to
 <a href="NetworkTimeout.html">network_timeout()</a> seconds. When that runs out
 the result is empty and <code>timedOut</code> says so, so a caller can report
-"timed out" instead of "no matches". MusicBrainz asks programs to make no more
-than one request a second; a request sent sooner may be refused, which looks
-like a failed search.</p>
+"timed out" instead of "no matches". A search MusicBrainz keeps refusing as
+"too many requests" also looks like a failed search; use <code>Search()</code>
+to tell the two apart.</p>
 <p>Without a <code>targetSeconds</code> (below 0), matches come back in
 MusicBrainz's own relevance order. With one, everything MusicBrainz returned is
 re-sorted by how close its length is to <code>targetSeconds</code> (closest

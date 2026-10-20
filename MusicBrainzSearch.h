@@ -9,8 +9,9 @@
 // MusicBrainzSearch.h
 //
 // Part of "tagkit" -- the reusable pieces of TagView.
-// A synchronous MusicBrainz recording (track) search by artist + title, and
-// a release search by artist + album. Both ask MusicBrainz's web service
+// A synchronous MusicBrainz recording (track) search -- by any mix of
+// artist, title, album, year, track number and comment, a page at a time --
+// and a release search by artist + album. Both ask MusicBrainz's web service
 // for JSON (through http_get(), so they have a time limit) and read the
 // answer, so other apps can reuse this instead of re-deriving the
 // query/parsing boilerplate.
@@ -27,18 +28,90 @@
 
 namespace tagkit {
 
+// What to look for in a recording search. Every text field is optional (an
+// empty one is left out of the search), but at least one must be filled in.
+struct RecordingQuery {
+	RecordingQuery()
+		:
+		offset(0),
+		limit(0),
+		targetSeconds(-1),
+		oneRowPerRelease(false)
+	{
+	}
+
+	BString	artist;
+	BString	title;
+	BString	album;			// a release (album) the recording is on
+	BString	year;			// release date: "1999", or "1999-03"
+	BString	track;			// position on its disc, e.g. "7"
+	BString	comment;		// MusicBrainz's disambiguation note
+
+	int32	offset;			// how many results to skip (paging); 0 == from
+							// the start
+	int32	limit;			// how many to ask for, 1-100; 0 == 25
+
+	// When >= 0, the page of results is re-sorted by how close each
+	// recording's length is to this many seconds (closest first, ties
+	// keeping MusicBrainz's order, recordings with no known length last).
+	// Only that page is sorted, not the whole search.
+	int32	targetSeconds;
+
+	// false: one RecordingMatch per recording, with the release that
+	// matches album (else the first one) filled in and every release listed
+	// in .releases for cover art lookups. true: one RecordingMatch per
+	// recording AND release -- the same song on three albums gives three
+	// matches, each with that release's album, year and track and only that
+	// release in .releases.
+	bool	oneRowPerRelease;
+};
+
+
+// One page of a recording search.
+struct RecordingSearchResult {
+	RecordingSearchResult()
+		:
+		status(B_OK),
+		totalCount(-1),
+		nextOffset(0)
+	{
+	}
+
+	// B_OK, or why the search failed: B_TIMED_OUT (a time limit ran out),
+	// B_BUSY (MusicBrainz said "too many requests" even after waiting and
+	// trying again), B_BAD_VALUE (nothing to search for) or B_ERROR.
+	status_t					status;
+	std::vector<RecordingMatch>	matches;
+
+	// How many recordings MusicBrainz says match in all, or -1 if unknown.
+	int32						totalCount;
+
+	// The offset to give the next RecordingQuery to get the following page.
+	int32						nextOffset;
+
+	// True if there is probably another page after this one.
+	bool						HasMore() const;
+};
+
+
 class MusicBrainzSearch {
 public:
-	// Performs network I/O -- always call this from a worker thread,
-	// never the UI thread. Returns up to maxResults matches, or an empty
-	// vector if there were no matches or the lookup failed for any reason
-	// (network error, malformed response, ...) -- failures are swallowed
-	// rather than thrown, so a failed search just looks like zero results.
+	// Looks up one page of recordings. Performs network I/O -- always call
+	// this from a worker thread, never the UI thread. Failures are not
+	// thrown: they come back in the result's status, with no matches.
 	//
-	// A search is given network_timeout() seconds (NetworkTimeout.h). If it
-	// runs out and timedOut is given, *timedOut is set to true, so a caller
-	// can say "timed out" rather than "no matches". (It is false for every
-	// other outcome.)
+	// Each search is given network_timeout() seconds (NetworkTimeout.h).
+	// MusicBrainz allows about one request a second; if it answers "too
+	// many requests" the search waits a moment and tries once more before
+	// giving up with B_BUSY.
+	static RecordingSearchResult Search(const RecordingQuery& query);
+
+	// The simple form of Search() for artist + song (+ album): the first
+	// page only, cut down to maxResults matches. Returns an empty vector if
+	// there were no matches or the lookup failed for any reason (network
+	// error, malformed response, ...) -- a failed search just looks like
+	// zero results; timedOut (if given) is set to true if a time limit ran
+	// out, false for every other outcome.
 	//
 	// album is optional (pass an empty string to leave it out): when given
 	// it's added to the query so only recordings that appear on a matching

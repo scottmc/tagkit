@@ -15,6 +15,7 @@
 #include <stdlib.h>
 
 #include <Debug.h>
+#include <OS.h>
 
 
 
@@ -27,8 +28,14 @@ namespace {
 // lists the most relevant first) are plenty to choose between.
 const int32 kMaxReleasesPerMatch = 15;
 
-// How many recordings to ask MusicBrainz for (its own default).
+// How many recordings to ask MusicBrainz for when the caller doesn't say
+// (its own default), and the most it allows in one request.
 const int32 kRecordingSearchLimit = 25;
+const int32 kMaxRecordingSearchLimit = 100;
+
+// How long to wait before trying again when MusicBrainz says "too many
+// requests" (it allows about one a second).
+const bigtime_t kBusyRetryDelay = 1500000;
 
 // How many releases to ask MusicBrainz for.
 const int32 kReleaseSearchLimit = 50;
@@ -88,22 +95,44 @@ YearOf(const JsonValue& date)
 }
 
 
+// Adds field:"value" to a Lucene query, joined to what is there by AND;
+// nothing is added for an empty value.
+void
+AddTerm(BString& query, const char* field, const BString& value)
+{
+	if (value.Length() == 0)
+		return;
+	if (query.Length() > 0)
+		query << " AND ";
+	query << field << ":\"" << EscapeLuceneQuoted(value) << "\"";
+}
+
+
 // Downloads a MusicBrainz web service search (type is "recording" or
 // "release") and reads the JSON answer. Returns B_OK with the parsed answer
-// in answer; B_TIMED_OUT if a time limit ran out; another error otherwise.
+// in answer; B_TIMED_OUT if a time limit ran out; B_BUSY if MusicBrainz
+// kept saying "too many requests"; another error otherwise.
 status_t
 RunSearch(const char* type, const BString& luceneQuery, int32 limit,
-	JsonValue& answer)
+	int32 offset, JsonValue& answer)
 {
 	BString url("https://musicbrainz.org/ws/2/");
-	url << type << "?fmt=json&limit=" << limit << "&query="
-		<< url_encode(luceneQuery);
+	url << type << "?fmt=json&limit=" << limit << "&offset=" << offset
+		<< "&query=" << url_encode(luceneQuery);
 
 	PRINT(("MusicBrainzSearch: %s\n", luceneQuery.String()));
 
 	std::vector<unsigned char> response;
 	BString error;
 	status_t status = http_get(url, response, &error);
+	if (status == B_BUSY) {
+		// Asked too soon after the last request: wait a moment, try once
+		// more.
+		fprintf(stderr, "TagView: MusicBrainz is busy; trying again\n");
+		snooze(kBusyRetryDelay);
+		error = "";
+		status = http_get(url, response, &error);
+	}
 	if (status != B_OK) {
 		fprintf(stderr, "TagView: MusicBrainz %s search failed: %s\n", type,
 			error.String());
@@ -145,56 +174,71 @@ TrackPosition(const JsonValue& release)
 	return 0;
 }
 
+
+ReleaseRef
+ReleaseRefOf(const JsonValue& release)
+{
+	ReleaseRef ref;
+	ref.id = release.Get("id").String();
+	ref.title = release.Get("title").String();
+	ref.year = YearOf(release.Get("date"));
+	return ref;
+}
+
 } // namespace
 
 
-std::vector<RecordingMatch>
-MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
-	const BString& album, int32 maxResults, int32 targetSeconds,
-	bool* timedOut)
+bool
+RecordingSearchResult::HasMore() const
 {
-	std::vector<RecordingMatch> matches;
-	if (timedOut != NULL)
-		*timedOut = false;
+	return status == B_OK && !matches.empty() && totalCount >= 0
+		&& nextOffset < totalCount;
+}
 
-	if (artist.Length() == 0 || song.Length() == 0)
-		return matches;
+
+/*static*/ RecordingSearchResult
+MusicBrainzSearch::Search(const RecordingQuery& query)
+{
+	RecordingSearchResult result;
 
 	BString luceneQuery;
-	luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist)
-		<< "\" AND recording:\"" << EscapeLuceneQuoted(song) << "\"";
-	if (album.Length() > 0)
-		luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album) << "\"";
+	AddTerm(luceneQuery, "artist", query.artist);
+	AddTerm(luceneQuery, "release", query.album);
+	AddTerm(luceneQuery, "recording", query.title);
+	AddTerm(luceneQuery, "date", query.year);
+	AddTerm(luceneQuery, "comment", query.comment);
+	AddTerm(luceneQuery, "tnum", query.track);
+	if (luceneQuery.Length() == 0) {
+		result.status = B_BAD_VALUE;
+		return result;
+	}
+
+	int32 offset = query.offset > 0 ? query.offset : 0;
+	int32 limit = query.limit > 0 ? query.limit : kRecordingSearchLimit;
+	if (limit > kMaxRecordingSearchLimit)
+		limit = kMaxRecordingSearchLimit;
+	result.nextOffset = offset;
 
 	JsonValue answer;
-	status_t status = RunSearch("recording", luceneQuery,
-		kRecordingSearchLimit, answer);
-	if (status != B_OK) {
-		if (status == B_TIMED_OUT && timedOut != NULL)
-			*timedOut = true;
-		return matches;
-	}
+	result.status = RunSearch("recording", luceneQuery, limit, offset, answer);
+	if (result.status != B_OK)
+		return result;
 
 	const JsonValue& recordings = answer.Get("recordings");
-	if (recordings.Count() == 0) {
+	result.totalCount = answer.Get("count").IsNumber()
+		? (int32)answer.Get("count").Number() : -1;
+	result.nextOffset = offset + recordings.Count();
+	if (recordings.Count() == 0)
 		PRINT(("MusicBrainzSearch: no recordings found\n"));
-		return matches;
-	}
 
-	// When sorting by length, look at everything MusicBrainz sent back
-	// (not just the first maxResults) so a close-length match further
-	// down its relevance list can still make the cut.
-	int32 count = recordings.Count();
-	if (targetSeconds < 0 && count > maxResults)
-		count = maxResults;
-
-	for (int32 i = 0; i < count; i++) {
+	for (int32 i = 0; i < recordings.Count(); i++) {
 		const JsonValue& recording = recordings.At(i);
 
 		RecordingMatch match;
 		match.id = recording.Get("id").String();
 		match.title = recording.Get("title").String();
 		match.artist = JoinArtistCredit(recording.Get("artist-credit"));
+		match.disambiguation = recording.Get("disambiguation").String();
 
 		// "length" is in milliseconds.
 		double length = recording.Get("length").Number();
@@ -206,15 +250,32 @@ MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
 			? (int32)recording.Get("score").Number() : -1;
 
 		const JsonValue& releases = recording.Get("releases");
+
+		if (query.oneRowPerRelease) {
+			if (releases.Count() == 0)
+				result.matches.push_back(match);
+
+			for (int32 r = 0; r < releases.Count(); r++) {
+				const JsonValue& release = releases.At(r);
+				RecordingMatch row = match;
+				row.releases.push_back(ReleaseRefOf(release));
+				row.album = release.Get("title").String();
+				row.year = YearOf(release.Get("date"));
+				row.track = TrackPosition(release);
+				result.matches.push_back(row);
+			}
+			continue;
+		}
+
 		if (releases.Count() > 0) {
 			// With an album given, the release whose title contains it
 			// is the one to report (and to try for cover art first);
 			// otherwise it's MusicBrainz's first release.
 			int32 chosen = 0;
-			if (album.Length() > 0) {
+			if (query.album.Length() > 0) {
 				for (int32 r = 0; r < releases.Count(); r++) {
 					BString eachTitle = releases.At(r).Get("title").String();
-					if (eachTitle.IFindFirst(album) >= 0) {
+					if (eachTitle.IFindFirst(query.album) >= 0) {
 						chosen = r;
 						break;
 					}
@@ -227,13 +288,7 @@ MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
 					&& (int32)match.releases.size() < kMaxReleasesPerMatch;
 					n++) {
 				int32 r = n == 0 ? chosen : (n <= chosen ? n - 1 : n);
-				const JsonValue& each = releases.At(r);
-
-				ReleaseRef ref;
-				ref.id = each.Get("id").String();
-				ref.title = each.Get("title").String();
-				ref.year = YearOf(each.Get("date"));
-				match.releases.push_back(ref);
+				match.releases.push_back(ReleaseRefOf(releases.At(r)));
 			}
 
 			const JsonValue& release = releases.At(chosen);
@@ -242,19 +297,44 @@ MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
 			match.track = TrackPosition(release);
 		}
 
-		matches.push_back(match);
+		result.matches.push_back(match);
 	}
 
-	if (targetSeconds >= 0) {
+	if (query.targetSeconds >= 0) {
 		// stable_sort so equally-close matches keep MusicBrainz's
 		// relevance order.
-		std::stable_sort(matches.begin(), matches.end(),
-			CloserToTarget(targetSeconds));
+		std::stable_sort(result.matches.begin(), result.matches.end(),
+			CloserToTarget(query.targetSeconds));
 	}
-	if ((int32)matches.size() > maxResults)
-		matches.resize(maxResults);
 
-	return matches;
+	return result;
+}
+
+
+std::vector<RecordingMatch>
+MusicBrainzSearch::SearchRecording(const BString& artist, const BString& song,
+	const BString& album, int32 maxResults, int32 targetSeconds,
+	bool* timedOut)
+{
+	if (timedOut != NULL)
+		*timedOut = false;
+
+	if (artist.Length() == 0 || song.Length() == 0)
+		return std::vector<RecordingMatch>();
+
+	RecordingQuery query;
+	query.artist = artist;
+	query.title = song;
+	query.album = album;
+	query.targetSeconds = targetSeconds;
+
+	RecordingSearchResult result = Search(query);
+	if (timedOut != NULL)
+		*timedOut = result.status == B_TIMED_OUT;
+
+	if ((int32)result.matches.size() > maxResults)
+		result.matches.resize(maxResults);
+	return result.matches;
 }
 
 
@@ -270,13 +350,12 @@ MusicBrainzSearch::SearchReleases(const BString& artist, const BString& album,
 		return releases;
 
 	BString luceneQuery;
-	luceneQuery << "artist:\"" << EscapeLuceneQuoted(artist) << "\"";
-	if (album.Length() > 0)
-		luceneQuery << " AND release:\"" << EscapeLuceneQuoted(album) << "\"";
+	AddTerm(luceneQuery, "artist", artist);
+	AddTerm(luceneQuery, "release", album);
 
 	JsonValue answer;
 	status_t status = RunSearch("release", luceneQuery, kReleaseSearchLimit,
-		answer);
+		0, answer);
 	if (status != B_OK) {
 		if (status == B_TIMED_OUT && timedOut != NULL)
 			*timedOut = true;
@@ -286,12 +365,7 @@ MusicBrainzSearch::SearchReleases(const BString& artist, const BString& album,
 	const JsonValue& list = answer.Get("releases");
 	for (int32 i = 0; i < list.Count()
 			&& (int32)releases.size() < maxResults; i++) {
-		const JsonValue& each = list.At(i);
-
-		ReleaseRef ref;
-		ref.id = each.Get("id").String();
-		ref.title = each.Get("title").String();
-		ref.year = YearOf(each.Get("date"));
+		ReleaseRef ref = ReleaseRefOf(list.At(i));
 
 		// Reissues of one album share a cover; keep the first.
 		bool repeat = false;
