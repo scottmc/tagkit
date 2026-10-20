@@ -1,7 +1,7 @@
 # TagKit
 
 Reusable music-tag pieces for Haiku programs: a tag data model, reading and
-writing tags with TagLib (MP3, Ogg Vorbis, FLAC), cover art lookup and
+writing tags with TagLib (MP3, Ogg Vorbis, FLAC, Opus, MP4/AAC, WAV and more; files are recognised by MIME type), cover art lookup and
 handling, MusicBrainz search, and a few views to show it all.
 
 TagKit began as the `src/tagkit` folder of

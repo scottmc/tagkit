@@ -31,6 +31,9 @@ string.</p>
 <h2>Functions</h2>
 <table>
 <tr><td><a href="#format_from_extension"><code>audio_format format_from_extension(const BString&amp; path)</code></a><br>The format implied by a file's extension.</td></tr>
+<tr><td><a href="#format_from_mime_type"><code>audio_format format_from_mime_type(const char* mimeType)</code></a><br>The format for an audio MIME type.</td></tr>
+<tr><td><a href="#format_from_type_and_name"><code>audio_format format_from_type_and_name(const char* mimeType, const BString&amp; fileName)</code></a><br>The best guess from a MIME type and a file name.</td></tr>
+<tr><td><a href="#format_from_file"><code>audio_format format_from_file(const BString&amp; path)</code></a><br>The format of a file, from its MIME type and name.</td></tr>
 <tr><td><a href="#format_label"><code>const char* format_label(audio_format format)</code></a><br>A human readable name for a format.</td></tr>
 <tr><td><a href="#guess_artist_song_from_file_name"><code>bool guess_artist_song_from_file_name(const BString&amp; fileName, BString&amp; artist, BString&amp; song)</code></a><br>A best-effort split of a file name into artist and song.</td></tr>
 </table>
@@ -67,23 +70,80 @@ string.</p>
 <tr><td><code>AUDIO_FORMAT_UNKNOWN</code></td><td>Not recognized.</td></tr>
 <tr><td><code>AUDIO_FORMAT_MP3</code></td><td>MP3 (ID3 tags).</td></tr>
 <tr><td><code>AUDIO_FORMAT_OGG</code></td><td>Ogg Vorbis.</td></tr>
-<tr><td><code>AUDIO_FORMAT_FLAC</code></td><td>FLAC.</td></tr></table>
+<tr><td><code>AUDIO_FORMAT_FLAC</code></td><td>FLAC.</td></tr>
+<tr><td><code>AUDIO_FORMAT_OPUS</code></td><td>Opus (in Ogg).</td></tr>
+<tr><td><code>AUDIO_FORMAT_SPEEX</code></td><td>Speex (in Ogg).</td></tr>
+<tr><td><code>AUDIO_FORMAT_MP4</code></td><td>MP4 / AAC / ALAC (<code>.m4a</code>, <code>.m4b</code>, <code>.mp4</code>, <code>.aac</code>).</td></tr>
+<tr><td><code>AUDIO_FORMAT_WAV</code></td><td>WAV.</td></tr>
+<tr><td><code>AUDIO_FORMAT_AIFF</code></td><td>AIFF.</td></tr>
+<tr><td><code>AUDIO_FORMAT_WAVPACK</code></td><td>WavPack.</td></tr>
+<tr><td><code>AUDIO_FORMAT_MUSEPACK</code></td><td>Musepack.</td></tr>
+<tr><td><code>AUDIO_FORMAT_APE</code></td><td>Monkey's Audio.</td></tr>
+<tr><td><code>AUDIO_FORMAT_ASF</code></td><td>WMA.</td></tr>
+<tr><td><code>AUDIO_FORMAT_TTA</code></td><td>True Audio.</td></tr></table>
+<p>All of these are read and written through TagLib's format-independent
+<code>FileRef</code>; the values after <code>AUDIO_FORMAT_FLAC</code> were added
+so apps can accept anything TagLib handles. Only MP3, Ogg Vorbis and FLAC
+have been tried with cover art so far.</p>
 </div>
 <div class="member"><h3 id="format_from_extension"><code>audio_format format_from_extension(const BString&amp; path)</code></h3>
 <p class="brief">The format implied by a file's extension.</p>
-<p>Looks at <code>.mp3</code>, <code>.ogg</code> and <code>.flac</code>,
-ignoring case.</p>
+<p>Looks at <code>.mp3</code>, <code>.ogg</code>, <code>.oga</code>,
+<code>.flac</code>, <code>.opus</code>, <code>.spx</code>, <code>.m4a</code>,
+<code>.m4b</code>, <code>.mp4</code>, <code>.aac</code>, <code>.wav</code>,
+<code>.aif</code>, <code>.aiff</code>, <code>.wv</code>, <code>.mpc</code>,
+<code>.ape</code>, <code>.wma</code> and <code>.tta</code>, ignoring case.
+Prefer <a href="#format_from_file"><code>format_from_file()</code></a> when the
+file exists.</p>
 <h4>Parameters</h4><dl>
 <dt><code>path</code></dt><dd>A file name or full path.</dd>
 </dl>
 <h4>Returns</h4><p class="param">The format, or <code>AUDIO_FORMAT_UNKNOWN</code> for any other extension.</p>
+</div>
+<div class="member"><h3 id="format_from_mime_type"><code>audio_format format_from_mime_type(const char* mimeType)</code></h3>
+<p class="brief">The format for an audio MIME type.</p>
+<p>Knows Haiku's type names (<code>audio/mpeg</code>,
+<code>audio/x-vorbis+ogg</code>, <code>audio/x-opus+ogg</code>,
+<code>audio/x-flac</code>, <code>audio/x-m4a</code>, <code>audio/x-wav</code>
+and so on) and the older spellings such as <code>audio/x-mp3</code> and
+<code>application/ogg</code>. The comparison ignores case and any
+<code>;parameters</code>.</p>
+<h4>Parameters</h4><dl>
+<dt><code>mimeType</code></dt><dd>The MIME type; may be <code>NULL</code>.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The format, or <code>AUDIO_FORMAT_UNKNOWN</code> for any other type.</p>
+</div>
+<div class="member"><h3 id="format_from_type_and_name"><code>audio_format format_from_type_and_name(const char* mimeType, const BString&amp; fileName)</code></h3>
+<p class="brief">The best guess from a MIME type and a file name.</p>
+<p>The MIME type wins. The file name decides when the type is missing or not
+an audio type (such as <code>application/octet-stream</code>), and when the
+type only says Ogg but the name says <code>.opus</code> or <code>.spx</code>.
+It takes the type as a string so a file panel filter, which is handed the
+type, can use it directly.</p>
+<h4>Parameters</h4><dl>
+<dt><code>mimeType</code></dt><dd>The MIME type; may be <code>NULL</code>.</dd>
+<dt><code>fileName</code></dt><dd>A file name or full path.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The format, or <code>AUDIO_FORMAT_UNKNOWN</code>.</p>
+</div>
+<div class="member"><h3 id="format_from_file"><code>audio_format format_from_file(const BString&amp; path)</code></h3>
+<p class="brief">The format of a file, from its MIME type and name.</p>
+<p>Reads the file's MIME type attribute (asking the system to work it out
+if the file has none yet) and combines it with the name as
+<code>format_from_type_and_name()</code> does. This is what lets a file with
+the wrong or missing extension, or one in a format the extension table doesn't
+list, still be recognised.</p>
+<h4>Parameters</h4><dl>
+<dt><code>path</code></dt><dd>Full path of an existing file.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The format, or <code>AUDIO_FORMAT_UNKNOWN</code> if it isn't audio TagKit knows or can't be opened.</p>
 </div>
 <div class="member"><h3 id="format_label"><code>const char* format_label(audio_format format)</code></h3>
 <p class="brief">A human readable name for a format.</p>
 <h4>Parameters</h4><dl>
 <dt><code>format</code></dt><dd>The format.</dd>
 </dl>
-<h4>Returns</h4><p class="param"><code>"MP3"</code>, <code>"Ogg Vorbis"</code>, <code>"FLAC"</code> or <code>"Unknown"</code>.</p>
+<h4>Returns</h4><p class="param">A name such as <code>"MP3"</code>, <code>"Ogg Vorbis"</code>, <code>"FLAC"</code>, <code>"Opus"</code> or <code>"MP4 / AAC"</code>, or <code>"Unknown"</code>.</p>
 </div>
 <div class="member"><h3 id="guess_artist_song_from_file_name"><code>bool guess_artist_song_from_file_name(const BString&amp; fileName, BString&amp; artist, BString&amp; song)</code></h3>
 <p class="brief">A best-effort split of a file name into artist and song.</p>
