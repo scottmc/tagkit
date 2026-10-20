@@ -20,7 +20,8 @@ repository (with its history) so other programs, such as Hare, can share it.
 - `CoverArtImage`, `CoverArtFetch`, `ITunesArtwork`, `HttpFetch` -- cover art
   kept as its original bytes, found on the Cover Art Archive
   with an iTunes fallback.
-- `MusicBrainzSearch`, `RecordingMatch` -- recording and release search
+- `MusicBrainzSearch`, `RecordingMatch`, `ReleaseInfo` -- recording and
+  release search, and disc ID / release lookups with track lists
   (MusicBrainz web service, as JSON, through `HttpFetch`).
 - `NetworkTimeout` -- the time limit (30 s by default, settable) that every
   web request works under.

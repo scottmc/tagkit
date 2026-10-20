@@ -24,6 +24,7 @@
 #include <String.h>
 
 #include "RecordingMatch.h"
+#include "ReleaseInfo.h"
 
 
 namespace tagkit {
@@ -137,6 +138,28 @@ public:
 	// network I/O on a worker thread, failures look like an empty result.
 	static std::vector<ReleaseRef> SearchReleases(const BString& artist,
 		const BString& album, int32 maxResults = 25, bool* timedOut = NULL);
+
+	// Looks up the releases that have this disc ID (what libdiscid
+	// computes from a CD's table of contents), with each release's album
+	// details and the track list of the matching disc. For a release of
+	// several discs only the one with this ID is listed (discNumber says
+	// which). status is B_ENTRY_NOT_FOUND when MusicBrainz has no release
+	// for that disc, which is common: try SearchReleases() with the
+	// artist and album instead, then LookupRelease(). Same rules as
+	// Search(): network I/O on a worker thread, failures come back in
+	// status, one retry if MusicBrainz says it is busy.
+	static ReleaseLookupResult LookupDiscId(const BString& discId);
+
+	// Looks up one release by its MusicBrainz ID: album details and a
+	// track list. With a discId the tracks are those of the disc with that
+	// ID (when the release has it, else of its only disc if it has just
+	// one); without one, or when no disc matches a release of several
+	// discs, the tracks of all discs are listed in order (TrackInfo::disc
+	// says which disc each is on). Use it to get the track list of a
+	// release found by SearchReleases(). result.releases has one entry on
+	// success.
+	static ReleaseLookupResult LookupRelease(const BString& releaseId,
+		const BString& discId = BString());
 };
 
 } // namespace tagkit

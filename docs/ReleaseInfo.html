@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReleaseInfo - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Data model &raquo; ReleaseInfo</div>
+<div id="content">
+<h1>ReleaseInfo</h1>
+<p class="brief">One MusicBrainz release as a lookup returns it, with a track list.</p>
+<pre>#include "tagkit/ReleaseInfo.h"</pre>
+<h2>Detailed Description</h2>
+<p>The answer of <a href="MusicBrainzSearch.html#LookupDiscId">LookupDiscId()</a> and <a href="MusicBrainzSearch.html#LookupRelease">LookupRelease()</a>. Like <a href="RecordingMatch.html">RecordingMatch</a> these are plain holders with no dependency on any JSON or web code.</p>
+<h2>Types</h2>
+<table>
+<tr><td><a href="#TrackInfo"><code>struct TrackInfo</code></a><br>One track of a disc.</td></tr>
+<tr><td><a href="#ReleaseInfo"><code>struct ReleaseInfo</code></a><br>A release's details and its tracks.</td></tr>
+<tr><td><a href="#ReleaseLookupResult"><code>struct ReleaseLookupResult</code></a><br>A status and the releases found.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="TrackInfo"><code>struct TrackInfo</code></h3>
+<p class="brief">One track of a disc.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>int32 number</code></td><td>Position on its disc, from 1.</td></tr>
+<tr><td><code>int32 disc</code></td><td>Which disc of the release (1 for the first); 0 if unknown.</td></tr>
+<tr><td><code>BString title</code></td><td>The track's title.</td></tr>
+<tr><td><code>BString artist</code></td><td>The track's artist credit, or the album's when the track has none of its own.</td></tr>
+<tr><td><code>BString artistId</code></td><td>MBID of the first credited artist; empty if unknown.</td></tr>
+<tr><td><code>BString recordingId</code></td><td>MusicBrainz recording ID.</td></tr>
+<tr><td><code>int32 durationSeconds</code></td><td>Length in seconds; -1 if unknown.</td></tr></table>
+</div>
+<div class="member"><h3 id="ReleaseInfo"><code>struct ReleaseInfo</code></h3>
+<p class="brief">A release's details and its tracks.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>BString id</code></td><td>The release's MusicBrainz ID.</td></tr>
+<tr><td><code>BString title</code></td><td>The album's title.</td></tr>
+<tr><td><code>BString artist</code></td><td>The album's artist credit, joined as MusicBrainz shows it ("A feat. B").</td></tr>
+<tr><td><code>BString artistId</code></td><td>MBID of the first credited artist.</td></tr>
+<tr><td><code>BString releaseGroupId</code></td><td>MBID of the release group; empty if unknown.</td></tr>
+<tr><td><code>BString date</code></td><td>"1999", "1999-03" or "1999-03-14", or empty.</td></tr>
+<tr><td><code>int32 year</code></td><td>The year; 0 if unknown.</td></tr>
+<tr><td><code>BString discId</code></td><td>The disc ID that was looked up, if any.</td></tr>
+<tr><td><code>int32 mediumCount</code></td><td>How many discs the release has.</td></tr>
+<tr><td><code>int32 discNumber</code></td><td>Which disc the tracks are from; 0 when they are from several because no disc ID said which.</td></tr>
+<tr><td><code>std::vector&lt;TrackInfo&gt; tracks</code></td><td>The tracks of that disc, in order.</td></tr></table>
+</div>
+<div class="member"><h3 id="ReleaseLookupResult"><code>struct ReleaseLookupResult</code></h3>
+<p class="brief">A status and the releases found.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>status_t status</code></td><td><code>B_OK</code>; <code>B_ENTRY_NOT_FOUND</code> (MusicBrainz doesn't know that ID, which is not a failure); <code>B_TIMED_OUT</code>; <code>B_BUSY</code> (too many requests, even after waiting and trying again); <code>B_BAD_VALUE</code> (the ID isn't well formed); or <code>B_ERROR</code>.</td></tr>
+<tr><td><code>std::vector&lt;ReleaseInfo&gt; releases</code></td><td>The matching releases in MusicBrainz's order.</td></tr></table>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>
