@@ -31,6 +31,11 @@ namespace tagkit {
 // fields (duration, bit rate, ...) are read-only properties of the file so
 // they are not written.
 //
+// After saving, the file is read back: if the tag fields were meant to change
+// but read exactly as before, the write was silently discarded (an audio CD's
+// files do this) and false is returned. To save many files with progress see
+// BatchWriter.h.
+//
 // This modifies the file on disk. It does blocking file I/O (rewriting the
 // tag, and for some formats padding or the whole file), so for more than a
 // file or two call it from a worker thread.

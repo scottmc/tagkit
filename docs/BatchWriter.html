@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BatchWriter - TagKit</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="top"><a href="index.html">TagKit</a> &raquo; Reading and writing &raquo; BatchWriter</div>
+<div id="content">
+<h1>BatchWriter</h1>
+<p class="brief">Saves the tags of many files, reporting after each one.</p>
+<pre>#include "tagkit/BatchWriter.h"</pre>
+<h2>Detailed Description</h2>
+<p><code>write_tags_batch()</code> is <a href="TagWriter.html">write_tags()</a> in a loop with a report. A program that saves a whole list calls it from a worker thread, and its progress function is called after each file, so the program can show &ldquo;Saved 3 of 12&rdquo; and stop early. One file that can't be saved never stops the others.</p>
+<p>The progress function runs on the thread that called <code>write_tags_batch()</code>. Don't touch views from it; send a message to the window, as TagView does (it sends one message per file and a last one when done, and updates its rows from the window's own thread).</p>
+<h2>Types</h2>
+<table>
+<tr><td><a href="#SaveResult"><code>struct SaveResult</code></a><br>What happened to one file.</td></tr>
+<tr><td><a href="#save_progress_function"><code>typedef bool (*save_progress_function)(int32 done, int32 total, const SaveResult&amp; result, void* cookie)</code></a><br>The progress callback.</td></tr>
+</table>
+<h2>Functions</h2>
+<table>
+<tr><td><a href="#write_tags_batch"><code>std::vector&lt;SaveResult&gt; write_tags_batch(const std::vector&lt;TagRecord&gt;&amp; records, save_progress_function progress = NULL, void* cookie = NULL)</code></a><br>Writes each record's tags to its file.</td></tr>
+</table>
+<h2>Documentation</h2>
+<div class="member"><h3 id="SaveResult"><code>struct SaveResult</code></h3>
+<p class="brief">What happened to one file.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>BString path</code></td><td>The record's path.</td></tr>
+<tr><td><code>BString fileName</code></td><td>The record's file name, for messages.</td></tr>
+<tr><td><code>bool saved</code></td><td><code>false</code> if <code>write_tags()</code> failed.</td></tr>
+<tr><td><code>BString error</code></td><td>Why, when <code>saved</code> is <code>false</code>; empty otherwise.</td></tr></table>
+</div>
+<div class="member"><h3 id="save_progress_function"><code>typedef bool (*save_progress_function)(int32 done, int32 total, const SaveResult&amp; result, void* cookie)</code></h3>
+<p class="brief">The progress callback.</p>
+<p>Called after each file, saved or failed.</p>
+<h4>Parameters</h4><dl>
+<dt><code>done</code></dt><dd>How many files have been tried so far, counting this one.</dd>
+<dt><code>total</code></dt><dd>How many there are.</dd>
+<dt><code>result</code></dt><dd>What happened to this file.</dd>
+<dt><code>cookie</code></dt><dd>The value given to <code>write_tags_batch()</code>.</dd>
+</dl>
+<h4>Returns</h4><p class="param"><code>true</code> to carry on, <code>false</code> to stop; the files after this one are left alone.</p>
+</div>
+<div class="member"><h3 id="write_tags_batch"><code>std::vector&lt;SaveResult&gt; write_tags_batch(const std::vector&lt;TagRecord&gt;&amp; records, save_progress_function progress = NULL, void* cookie = NULL)</code></h3>
+<p class="brief">Writes each record's tags to its file.</p>
+<p>The records are written in order and are not changed; the caller decides what to do with the ones that were saved, usually reading them back with <code>read_tags()</code>. Blocks until done, so call it from a worker thread unless the list is short.</p>
+<h4>Parameters</h4><dl>
+<dt><code>records</code></dt><dd>The files to save.</dd>
+<dt><code>progress</code></dt><dd>Called after each file; may be <code>NULL</code>.</dd>
+<dt><code>cookie</code></dt><dd>Passed back to <code>progress</code>.</dd>
+</dl>
+<h4>Returns</h4><p class="param">One <code>SaveResult</code> for every file tried, in the order of <code>records</code>; fewer than <code>records.size()</code> if <code>progress</code> asked to stop.</p>
+</div>
+<div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
+</div>
+</body>
+</html>

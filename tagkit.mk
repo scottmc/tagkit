@@ -34,6 +34,7 @@
 TAGKIT_DIR ?= tagkit
 
 TAGKIT_SRCS = $(addprefix $(TAGKIT_DIR)/, \
+	BatchWriter.cpp \
 	CompactView.cpp \
 	CoverArtCandidatesView.cpp \
 	CoverArtDragDrop.cpp \

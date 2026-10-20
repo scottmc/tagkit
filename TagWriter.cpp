@@ -29,6 +29,42 @@ to_taglib_string(const BString& string)
 }
 
 
+namespace {
+
+// The seven fields write_tags() sets, as TagLib holds them.
+struct TagFields {
+	TagLib::String	artist;
+	TagLib::String	title;
+	TagLib::String	album;
+	TagLib::String	genre;
+	TagLib::String	comment;
+	unsigned int	track;
+	unsigned int	year;
+
+	explicit TagFields(const TagLib::Tag* tag)
+		:
+		artist(tag->artist()),
+		title(tag->title()),
+		album(tag->album()),
+		genre(tag->genre()),
+		comment(tag->comment()),
+		track(tag->track()),
+		year(tag->year())
+	{
+	}
+
+	bool operator==(const TagFields& other) const
+	{
+		return artist == other.artist && title == other.title
+			&& album == other.album && genre == other.genre
+			&& comment == other.comment && track == other.track
+			&& year == other.year;
+	}
+};
+
+}	// namespace
+
+
 bool
 write_tags(const TagRecord& record, BString* errorMessage)
 {
@@ -55,6 +91,11 @@ write_tags(const TagRecord& record, BString* errorMessage)
 	}
 
 	TagLib::Tag* tag = file.tag();
+
+	// What the file holds now, to tell afterwards whether the save changed
+	// anything.
+	const TagFields before(tag);
+
 	tag->setArtist(to_taglib_string(record.artist));
 	tag->setTitle(to_taglib_string(record.title));
 	tag->setAlbum(to_taglib_string(record.album));
@@ -62,6 +103,7 @@ write_tags(const TagRecord& record, BString* errorMessage)
 	tag->setComment(to_taglib_string(record.comment));
 	tag->setTrack(record.track > 0 ? (unsigned int)record.track : 0);
 	tag->setYear(record.year > 0 ? (unsigned int)record.year : 0);
+	const bool tagsChanged = !(TagFields(tag) == before);
 
 	if (record.newCoverArt != NULL && !record.newCoverArt->data.empty()) {
 		// Replace the file's front cover (if it has one) with the chosen
@@ -113,6 +155,22 @@ write_tags(const TagRecord& record, BString* errorMessage)
 				"(is it read-only?)";
 		}
 		return false;
+	}
+
+	// Some places (an audio CD's files, say) accept a write and quietly throw
+	// it away. If the tags were meant to change but read back exactly as they
+	// were, say so instead of claiming success. (Only "nothing changed at
+	// all" counts: a format may legitimately shorten or tidy a value.)
+	if (tagsChanged) {
+		TagLib::FileRef saved(record.path.String());
+		if (!saved.isNull() && saved.tag() != NULL
+			&& TagFields(saved.tag()) == before) {
+			if (errorMessage != NULL) {
+				*errorMessage = "the file didn't keep the changes "
+					"(is it on a read-only volume?)";
+			}
+			return false;
+		}
 	}
 
 	return true;

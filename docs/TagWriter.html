@@ -31,6 +31,7 @@ are not written.</p>
 <p>If <code>record.newCoverArt</code> is set it replaces the file's front
 cover. If <code>record.removeCoverArt</code> is set (and there is no new art),
 all embedded pictures are removed.</p>
+<p>After saving, if the tag fields were meant to change but read back exactly as they were, <code>write_tags()</code> reports a failure (&ldquo;the file didn't keep the changes&rdquo;). Some places, such as an audio CD's files, accept a write and quietly throw it away. A format that only shortens or tidies a value is not treated as a failure. To save many files with progress, see <a href="BatchWriter.html">BatchWriter</a>.</p>
 <h4>Parameters</h4><dl>
 <dt><code>record</code></dt><dd>What to write.</dd>
 <dt><code>errorMessage</code></dt><dd>If not <code>NULL</code>, receives a short reason suitable for showing to the user. A file that is missing, not a file, on a read-only volume or not writable is turned down first, with the reason from <a href="FileAccess.html">file_write_problem_text()</a>.</dd>

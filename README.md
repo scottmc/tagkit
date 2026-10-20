@@ -14,6 +14,7 @@ repository (with its history) so other programs, such as Hare, can share it.
   dependency on any tagging library) and the editable fields.
 - `TagReader`, `TagWriter`, `TagAttributes` -- read and write tags with
   TagLib; copy tags to Haiku file attributes.
+- `BatchWriter` -- saves many files with a progress callback.
 - `FileAccess` -- whether a file can be saved (read-only volume, no
   permission, missing), and why not.
 - `CoverArtImage`, `CoverArtFetch`, `ITunesArtwork`, `HttpFetch` -- cover art
