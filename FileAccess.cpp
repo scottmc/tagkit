@@ -8,6 +8,7 @@
  */
 #include "FileAccess.h"
 
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <Entry.h>
@@ -36,6 +37,15 @@ check_file_writable(const BString& path)
 	BVolume volume;
 	if (entry.GetVolume(&volume) == B_OK && volume.IsReadOnly())
 		return FILE_READ_ONLY_VOLUME;
+
+	// Haiku's usual user is the superuser as far as access() is concerned,
+	// which says "yes" to a file with no write bit at all (the files on an
+	// audio CD are -r--r--r--). A file nobody may write to is read-only.
+	struct stat st;
+	if (stat(path.String(), &st) == 0
+		&& (st.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) == 0) {
+		return FILE_NO_PERMISSION;
+	}
 
 	if (access(path.String(), W_OK) != 0)
 		return FILE_NO_PERMISSION;

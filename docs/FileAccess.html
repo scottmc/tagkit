@@ -32,7 +32,7 @@
 <tr><td><code>FILE_MISSING</code></td><td>No such file, or a symbolic link that points nowhere.</td></tr>
 <tr><td><code>FILE_NOT_A_FILE</code></td><td>A folder or other non-file.</td></tr>
 <tr><td><code>FILE_READ_ONLY_VOLUME</code></td><td>The volume it is on is read-only.</td></tr>
-<tr><td><code>FILE_NO_PERMISSION</code></td><td>The user may not write to the file.</td></tr></table>
+<tr><td><code>FILE_NO_PERMISSION</code></td><td>The user may not write to the file, or no one may: it has no write permission bit at all (as on the files of an audio CD, which Haiku's superuser could otherwise write to).</td></tr></table>
 </div>
 <div class="member"><h3 id="check_file_writable"><code>file_write_problem check_file_writable(const BString&amp; path)</code></h3>
 <p class="brief">Looks at a file and reports the problem, if any.</p>
