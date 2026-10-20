@@ -29,6 +29,12 @@
 // gives TagKit itself (an EmptyArtButton's label, say) are the program's to
 // translate.
 //
+// A program that already has translations for the same words -- ArmyKnife
+// has its own "Artist", "Album" and the rest in its own catalog contexts --
+// can have TagKit use those instead, or give them different wording, with
+// set_string_override() (below). It works with or without
+// TAGKIT_USE_CATALOG.
+//
 // Messages with something in them use a %placeholder% that is replaced with
 // the value after translating ("Edit %field%"), and counts use ICU plural
 // rules ("{0, plural, one{# file selected} other{# files selected}}"),
@@ -43,13 +49,63 @@
 #ifdef TAGKIT_USE_CATALOG
 #	include <Catalog.h>
 #	include <StringFormat.h>
-#	define TAGKIT_TR(text) B_TRANSLATE_CONTEXT(text, "TagKit")
+#	define TAGKIT_TR(text) \
+		::tagkit::apply_string_override(text, B_TRANSLATE_CONTEXT(text, "TagKit"))
 #else
-#	define TAGKIT_TR(text) (text)
+#	define TAGKIT_TR(text) ::tagkit::apply_string_override(text, text)
 #endif
 
 
 namespace tagkit {
+
+// Called for every string TagKit shows. english is the string as written in
+// TagKit's source (also the lookup key); translated is what TagKit would
+// show (the same as english when there is no catalog or no translation).
+// Return the text to show instead, or NULL to keep translated. The returned
+// pointer has to stay valid for as long as the string is used, which is
+// true of what B_TRANSLATE() returns; it is not copied.
+typedef const char* (*string_override_function)(const char* english,
+	const char* translated, void* cookie);
+
+struct StringOverride {
+	string_override_function	function;
+	void*						cookie;
+};
+
+
+inline StringOverride&
+string_override()
+{
+	static StringOverride current = { NULL, NULL };
+	return current;
+}
+
+
+// Installs (or, with NULL, removes) the override. Do it once at start-up,
+// before any TagKit window or view is made: the strings are looked up as they
+// are used, and this is not locked.
+inline void
+set_string_override(string_override_function function, void* cookie = NULL)
+{
+	string_override().function = function;
+	string_override().cookie = cookie;
+}
+
+
+// What TAGKIT_TR() uses; not meant to be called directly.
+inline const char*
+apply_string_override(const char* english, const char* translated)
+{
+	const StringOverride& current = string_override();
+	if (current.function != NULL) {
+		const char* replacement
+			= current.function(english, translated, current.cookie);
+		if (replacement != NULL)
+			return replacement;
+	}
+	return translated;
+}
+
 
 // text with the first occurrence of placeholder (such as "%field%") replaced
 // by value.
@@ -68,9 +124,11 @@ files_selected_text(int32 count)
 {
 	BString result;
 #ifdef TAGKIT_USE_CATALOG
-	BStringFormat format(B_TRANSLATE_CONTEXT(
+	BStringFormat format(apply_string_override(
 		"{0, plural, one{# file selected} other{# files selected}}",
-		"TagKit"));
+		B_TRANSLATE_CONTEXT(
+			"{0, plural, one{# file selected} other{# files selected}}",
+			"TagKit")));
 	if (format.Format(result, (int64)count) == B_OK)
 		return result;
 	result = "";

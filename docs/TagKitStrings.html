@@ -26,19 +26,55 @@ LIBS = $(STDCPPLIBS) be $(TAGKIT_LIBS) $(TAGKIT_CATALOG_LIBS)</pre>
 </ul>
 <p>Words a program gives TagKit itself, such as an <a href="EmptyArtButton.html">EmptyArtButton</a>'s label, are the program's to translate. The genre names are not translated, and neither are the audio format names.</p>
 <p>Messages with something in them have a <code>%placeholder%</code> replaced with the value after translating (&ldquo;Edit %field%&rdquo;, &ldquo;Cover art for "%file%"&rdquo;), and counts use ICU plural rules (<code>{0, plural, one{# file selected} other{# files selected}}</code>), which a translator can adapt to the language's own plural forms.</p>
+<h3>Using the program's own words</h3>
+<p>A program that already translates the same words (ArmyKnife has its own &ldquo;Artist&rdquo;, &ldquo;Album&rdquo; and so on, in its own catalog contexts) can have TagKit show those, or different wording, by installing an override once at start-up, before any TagKit window or view is made:</p>
+<pre>static const char*
+MyStrings(const char* english, const char* translated, void* cookie)
+{
+	if (strcmp(english, "Artist") == 0)
+		return B_TRANSLATE_CONTEXT("Artist", "EditorView");
+	if (strcmp(english, "Album") == 0)
+		return B_TRANSLATE_CONTEXT("Album", "EditorView");
+	return NULL;	// keep TagKit's own
+}
+
+tagkit::set_string_override(MyStrings);</pre>
+<p>The function is called for every TagKit string with the English text as written in TagKit's source and what TagKit would show; it returns the text to show instead, or <code>NULL</code> to keep it. The pointer is not copied, so it must stay valid, which is true of what <code>B_TRANSLATE()</code> returns. Because the <code>B_TRANSLATE_CONTEXT()</code> calls are in the program's own source, the program's catkeys collection finds them. It works with or without <code>TAGKIT_USE_CATALOG</code>. The plural text for <code>files_selected_text()</code> is also passed through (its English is the whole <code>{0, plural, ...}</code> pattern) but only when <code>TAGKIT_USE_CATALOG</code> is defined.</p>
+<h2>Types</h2>
+<table>
+<tr><td><a href="#string_override_function"><code>typedef const char* (*string_override_function)(const char* english, const char* translated, void* cookie)</code></a><br>The override callback.</td></tr>
+</table>
 <h2>Macros</h2>
 <table>
 <tr><td><a href="#TAGKIT_TR"><code>TAGKIT_TR(text)</code></a><br>Marks and translates a string.</td></tr>
 </table>
 <h2>Functions</h2>
 <table>
+<tr><td><a href="#set_string_override"><code>void set_string_override(string_override_function function, void* cookie = NULL)</code></a><br>Lets the program replace TagKit's strings.</td></tr>
 <tr><td><a href="#fill_in"><code>BString fill_in(const char* text, const char* placeholder, const char* value)</code></a><br>Replaces a placeholder in a translated text.</td></tr>
 <tr><td><a href="#files_selected_text"><code>BString files_selected_text(int32 count)</code></a><br>&ldquo;3 files selected&rdquo; in the program's language.</td></tr>
 </table>
 <h2>Documentation</h2>
+<div class="member"><h3 id="string_override_function"><code>typedef const char* (*string_override_function)(const char* english, const char* translated, void* cookie)</code></h3>
+<p class="brief">The override callback.</p>
+<h4>Parameters</h4><dl>
+<dt><code>english</code></dt><dd>The string as written in TagKit's source.</dd>
+<dt><code>translated</code></dt><dd>What TagKit would show: the catalog's translation, or the English if there is none or no catalog.</dd>
+<dt><code>cookie</code></dt><dd>The value given to <code>set_string_override()</code>.</dd>
+</dl>
+<h4>Returns</h4><p class="param">The text to show, which must stay valid while it is used, or <code>NULL</code> to keep <code>translated</code>.</p>
+</div>
+<div class="member"><h3 id="set_string_override"><code>void set_string_override(string_override_function function, void* cookie = NULL)</code></h3>
+<p class="brief">Lets the program replace TagKit's strings.</p>
+<p>Call once at start-up before any TagKit window or view is made; it is not locked. Pass <code>NULL</code> to remove the override.</p>
+<h4>Parameters</h4><dl>
+<dt><code>function</code></dt><dd>The callback, or <code>NULL</code>.</dd>
+<dt><code>cookie</code></dt><dd>Passed back to the callback.</dd>
+</dl>
+</div>
 <div class="member"><h3 id="TAGKIT_TR"><code>TAGKIT_TR(text)</code></h3>
 <p class="brief">Marks and translates a string.</p>
-<p>With <code>TAGKIT_USE_CATALOG</code> it is <code>B_TRANSLATE_CONTEXT(text, "TagKit")</code>; without it, just the text. Call it where the string is used, not for a global or static, so the translation is looked up after the program's catalog is loaded.</p>
+<p>With <code>TAGKIT_USE_CATALOG</code> it is <code>B_TRANSLATE_CONTEXT(text, "TagKit")</code>; without it, just the text; either way the result goes through the override, if one is set. Call it where the string is used, not for a global or static, so the translation is looked up after the program's catalog is loaded.</p>
 </div>
 <div class="member"><h3 id="fill_in"><code>BString fill_in(const char* text, const char* placeholder, const char* value)</code></h3>
 <p class="brief">Replaces a placeholder in a translated text.</p>
