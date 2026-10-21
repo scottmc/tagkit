@@ -25,6 +25,23 @@ the tags out as attributes. They use the same set as ArmyKnife:</p>
 <tr><td><code>Media:Year</code></td><td>int32</td><td>year</td></tr>
 <tr><td><code>Media:Genre</code></td><td>string</td><td>genre</td></tr>
 <tr><td><code>Media:Comment</code></td><td>string</td><td>comment</td></tr></table>
+<p>By default the title, year, genre and comment use the <code>Media:</code> names
+above. An <a href="#AttributeOptions"><code>AttributeOptions</code></a> can switch
+those four to the <code>Audio:</code> names Hare has always used
+(<code>Audio:Title</code>, <code>Audio:Year</code>, <code>Audio:Genre</code>,
+<code>Audio:Comment</code>), and can add the MusicBrainz identifiers as string
+attributes:</p>
+<table><tr><th>Attribute</th><th>From</th></tr>
+<tr><td><code>Audio:MUSICBRAINZ_DISCID</code></td><td>musicBrainz.discId</td></tr>
+<tr><td><code>Audio:MUSICBRAINZ_ALBUMID</code></td><td>musicBrainz.releaseId</td></tr>
+<tr><td><code>Audio:MUSICBRAINZ_RELEASEGROUPID</code></td><td>musicBrainz.releaseGroupId</td></tr>
+<tr><td><code>Audio:MUSICBRAINZ_ARTISTID</code></td><td>musicBrainz.artistId</td></tr>
+<tr><td><code>Audio:MUSICBRAINZ_TRACKID</code></td><td>musicBrainz.recordingId</td></tr></table>
+<p>An id the record doesn't hold is read from the file's own tags when the file
+has it there, so a record read from a file still gets its ids copied. An id
+found in neither place is left alone. A newly written attribute is also added
+to the attribute info of the file's MIME type, which is what makes Tracker offer
+it as a column.</p>
 <p>A blank tag (empty text, or a track or year of <code>0</code>) never touches
 the file's attribute: an attribute is added or updated only when the tag has a
 value to put there. When an attribute already exists with a different value, it
@@ -33,26 +50,40 @@ behind).</p>
 <p>The attributes are made from the record, so write the record's tags to the
 file first if you want the attributes to match what is in the file.</p>
 <div class="figure"><img src="images/edit-menu.png" alt="The Edit menu in TagView. Copy Tags to Attributes uses tag_attributes_need_update() to decide whether it is enabled, and copy_tags_to_attributes() when chosen."><p class="caption">The Edit menu in TagView. Copy Tags to Attributes uses tag_attributes_need_update() to decide whether it is enabled, and copy_tags_to_attributes() when chosen.</p></div>
+<h2>Types</h2>
+<table>
+<tr><td><a href="#AttributeOptions"><code>struct AttributeOptions</code></a><br>Which attribute names to use, and whether to include the MusicBrainz ids.</td></tr>
+</table>
 <h2>Functions</h2>
 <table>
-<tr><td><a href="#tag_attributes_need_update"><code>bool tag_attributes_need_update(const TagRecord&amp; record)</code></a><br>Whether writing the tags as attributes would change anything.</td></tr>
-<tr><td><a href="#copy_tags_to_attributes"><code>status_t copy_tags_to_attributes(const TagRecord&amp; record, int32* written = NULL)</code></a><br>Adds the missing attributes and updates the ones that differ.</td></tr>
+<tr><td><a href="#tag_attributes_need_update"><code>bool tag_attributes_need_update(const TagRecord&amp; record, const AttributeOptions&amp; options = AttributeOptions())</code></a><br>Whether writing the tags as attributes would change anything.</td></tr>
+<tr><td><a href="#copy_tags_to_attributes"><code>status_t copy_tags_to_attributes(const TagRecord&amp; record, int32* written = NULL, const AttributeOptions&amp; options = AttributeOptions())</code></a><br>Adds the missing attributes and updates the ones that differ.</td></tr>
 </table>
 <h2>Documentation</h2>
-<div class="member"><h3 id="tag_attributes_need_update"><code>bool tag_attributes_need_update(const TagRecord&amp; record)</code></h3>
+<div class="member"><h3 id="AttributeOptions"><code>struct AttributeOptions</code></h3>
+<p class="brief">Which attribute names to use, and whether to include the MusicBrainz ids.</p>
+<p>The default-constructed options give the behavior these functions always had.</p>
+<h4>Members</h4><dl>
+<dt><code>attribute_naming naming</code></dt><dd><code>ATTRIBUTE_NAMES_MEDIA</code> (the default: <code>Media:Title</code>, <code>Media:Year</code>, <code>Media:Genre</code>, <code>Media:Comment</code>) or <code>ATTRIBUTE_NAMES_AUDIO</code> (<code>Audio:Title</code>, <code>Audio:Year</code>, <code>Audio:Genre</code>, <code>Audio:Comment</code>). Artist, album and track are <code>Audio:</code> either way.</dd>
+<dt><code>bool musicBrainzIds</code></dt><dd>Also write the five <code>Audio:MUSICBRAINZ_*</code> attributes. Default <code>false</code>.</dd>
+</dl>
+</div>
+<div class="member"><h3 id="tag_attributes_need_update"><code>bool tag_attributes_need_update(const TagRecord&amp; record, const AttributeOptions&amp; options = AttributeOptions())</code></h3>
 <p class="brief">Whether writing the tags as attributes would change anything.</p>
 <p>Cheap enough to call when a menu opens, to decide whether to enable a Copy Tags to Attributes command.</p>
 <h4>Parameters</h4><dl>
 <dt><code>record</code></dt><dd>The record, whose <code>path</code> names the file.</dd>
+<dt><code>options</code></dt><dd>The names and ids to check for.</dd>
 </dl>
 <h4>Returns</h4><p class="param"><code>true</code> if at least one attribute would be added or changed. <code>false</code> if the file already has them all, or can't be opened.</p>
 </div>
-<div class="member"><h3 id="copy_tags_to_attributes"><code>status_t copy_tags_to_attributes(const TagRecord&amp; record, int32* written = NULL)</code></h3>
+<div class="member"><h3 id="copy_tags_to_attributes"><code>status_t copy_tags_to_attributes(const TagRecord&amp; record, int32* written = NULL, const AttributeOptions&amp; options = AttributeOptions())</code></h3>
 <p class="brief">Adds the missing attributes and updates the ones that differ.</p>
 <p>Attributes that already match are left alone.</p>
 <h4>Parameters</h4><dl>
 <dt><code>record</code></dt><dd>The record, whose <code>path</code> names the file.</dd>
 <dt><code>written</code></dt><dd>If not <code>NULL</code>, set to how many attributes were added or changed.</dd>
+<dt><code>options</code></dt><dd>The names and ids to write.</dd>
 </dl>
 <h4>Returns</h4><p class="param"><code>B_OK</code>, or the error that stopped it.</p>
 </div>
