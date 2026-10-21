@@ -13,12 +13,13 @@
 <p class="brief">One MusicBrainz release as a lookup returns it, with a track list.</p>
 <pre>#include "tagkit/ReleaseInfo.h"</pre>
 <h2>Detailed Description</h2>
-<p>The answer of <a href="MusicBrainzSearch.html#LookupDiscId">LookupDiscId()</a> and <a href="MusicBrainzSearch.html#LookupRelease">LookupRelease()</a>. Like <a href="RecordingMatch.html">RecordingMatch</a> these are plain holders with no dependency on any JSON or web code.</p>
+<p>The answer of <a href="MusicBrainzSearch.html#LookupDiscId">LookupDiscId()</a>, <a href="MusicBrainzSearch.html#LookupRelease">LookupRelease()</a> and <a href="MusicBrainzSearch.html#LookupDisc">LookupDisc()</a>. Like <a href="RecordingMatch.html">RecordingMatch</a> these are plain holders with no dependency on any JSON or web code.</p>
 <h2>Types</h2>
 <table>
 <tr><td><a href="#TrackInfo"><code>struct TrackInfo</code></a><br>One track of a disc.</td></tr>
 <tr><td><a href="#ReleaseInfo"><code>struct ReleaseInfo</code></a><br>A release's details and its tracks.</td></tr>
 <tr><td><a href="#ReleaseLookupResult"><code>struct ReleaseLookupResult</code></a><br>A status and the releases found.</td></tr>
+<tr><td><a href="#DiscLookupResult"><code>struct DiscLookupResult</code></a><br>The best release for a CD, and releases to look for cover art.</td></tr>
 </table>
 <h2>Documentation</h2>
 <div class="member"><h3 id="TrackInfo"><code>struct TrackInfo</code></h3>
@@ -52,6 +53,16 @@
 <table><tr><th>Field</th><th>Meaning</th></tr>
 <tr><td><code>status_t status</code></td><td><code>B_OK</code>; <code>B_ENTRY_NOT_FOUND</code> (MusicBrainz doesn't know that ID, which is not a failure); <code>B_TIMED_OUT</code>; <code>B_BUSY</code> (too many requests, even after waiting and trying again); <code>B_BAD_VALUE</code> (the ID isn't well formed); or <code>B_ERROR</code>.</td></tr>
 <tr><td><code>std::vector&lt;ReleaseInfo&gt; releases</code></td><td>The matching releases in MusicBrainz's order.</td></tr></table>
+</div>
+<div class="member"><h3 id="DiscLookupResult"><code>struct DiscLookupResult</code></h3>
+<p class="brief">The best release for a CD, and releases to look for cover art.</p>
+<p>The answer of <a href="MusicBrainzSearch.html#LookupDisc">LookupDisc()</a>.</p>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>status_t status</code></td><td><code>B_OK</code> when a release was found; <code>B_ENTRY_NOT_FOUND</code> when nothing matched; <code>B_TIMED_OUT</code>, <code>B_BUSY</code>, <code>B_BAD_VALUE</code> (nothing to look up by) or <code>B_ERROR</code>.</td></tr>
+<tr><td><code>bool foundByDiscId</code></td><td>Found by the disc ID itself rather than the artist and album search.</td></tr>
+<tr><td><code>bool hasTracks</code></td><td><code>release.tracks</code> is the track list of the CD: always for a disc ID match, and for a search match only when a disc has as many tracks as the CD. When <code>false</code>, only the album-level details of <code>release</code> can be trusted.</td></tr>
+<tr><td><code>ReleaseInfo release</code></td><td>The best release.</td></tr>
+<tr><td><code>std::vector&lt;ReleaseRef&gt; candidates</code></td><td>Releases whose cover art is worth offering, best first (<code>release</code> is the first).</td></tr></table>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>

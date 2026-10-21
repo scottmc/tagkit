@@ -160,6 +160,23 @@ public:
 	// success.
 	static ReleaseLookupResult LookupRelease(const BString& releaseId,
 		const BString& discId = BString());
+
+	// Finds the best release for a CD: by its disc ID if MusicBrainz knows
+	// it (LookupDiscId()), otherwise, when artist is given, by searching
+	// for the artist and album (SearchReleases()) and looking the first
+	// few results up (LookupRelease()). A release found by the search
+	// lends its track list only if it has a disc with exactly trackCount
+	// tracks, so a deluxe edition with extra tracks, or a box set where no
+	// disc fits, never attaches the wrong recordings to the CD's tracks;
+	// pass 0 when the track count isn't known to never use one. Either
+	// way DiscLookupResult::candidates lists releases to look for cover
+	// art. discId, artist and album may each be empty, but not all of
+	// them. Requests are spaced out to stay within MusicBrainz's rate
+	// limit. Same rules as the other lookups: network I/O on a worker
+	// thread, failures come back in the status.
+	static DiscLookupResult LookupDisc(const BString& discId,
+		int32 trackCount, const BString& artist = BString(),
+		const BString& album = BString(), int32 maxCandidates = 10);
 };
 
 } // namespace tagkit

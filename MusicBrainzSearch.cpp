@@ -14,7 +14,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <Autolock.h>
 #include <Debug.h>
+#include <Locker.h>
 #include <OS.h>
 
 
@@ -39,6 +41,31 @@ const bigtime_t kBusyRetryDelay = 1500000;
 
 // How many releases to ask MusicBrainz for.
 const int32 kReleaseSearchLimit = 50;
+
+// The least time between two requests to MusicBrainz, which allows about
+// one a second.
+const bigtime_t kRequestGap = 1100000;
+
+// How many search results LookupDisc() looks up to find one whose track list
+// fits the disc.
+const int32 kMaxDiscCandidatesLookedUp = 3;
+
+
+// Waits, if need be, until at least kRequestGap has passed since the last
+// request to MusicBrainz made by any thread of this program, so lookups made
+// one after another (disc ID, search, release) don't run into its limit.
+void
+WaitForRequestSlot()
+{
+	static BLocker sLock("MusicBrainz request pacing");
+	static bigtime_t sLastRequest = 0;
+
+	BAutolock locker(sLock);
+	bigtime_t now = system_time();
+	if (sLastRequest != 0 && now - sLastRequest < kRequestGap)
+		snooze(kRequestGap - (now - sLastRequest));
+	sLastRequest = system_time();
+}
 
 
 BString
@@ -120,20 +147,22 @@ FetchJson(const BString& url, const char* what, JsonValue& answer)
 	std::vector<unsigned char> response;
 	BString error;
 	int32 httpStatus = 0;
+	WaitForRequestSlot();
 	status_t status = http_get(url, response, &error, 0, &httpStatus);
 	if (status == B_BUSY) {
 		// Asked too soon after the last request: wait a moment, try once
 		// more.
-		fprintf(stderr, "TagView: MusicBrainz is busy; trying again\n");
+		fprintf(stderr, "TagKit: MusicBrainz is busy; trying again\n");
 		snooze(kBusyRetryDelay);
 		error = "";
 		httpStatus = 0;
+		WaitForRequestSlot();
 		status = http_get(url, response, &error, 0, &httpStatus);
 	}
 	if (status != B_OK && httpStatus == 404)
 		return B_ENTRY_NOT_FOUND;
 	if (status != B_OK) {
-		fprintf(stderr, "TagView: MusicBrainz %s failed: %s\n", what,
+		fprintf(stderr, "TagKit: MusicBrainz %s failed: %s\n", what,
 			error.String());
 		return status;
 	}
@@ -141,7 +170,7 @@ FetchJson(const BString& url, const char* what, JsonValue& answer)
 	if (response.empty()
 			|| !JsonValue::Parse((const char*)&response[0], response.size(),
 				answer)) {
-		fprintf(stderr, "TagView: MusicBrainz %s: unreadable answer\n", what);
+		fprintf(stderr, "TagKit: MusicBrainz %s: unreadable answer\n", what);
 		return B_BAD_DATA;
 	}
 
@@ -163,6 +192,37 @@ RunSearch(const char* type, const BString& luceneQuery, int32 limit,
 	BString what(type);
 	what << " search";
 	return FetchJson(url, what.String(), answer);
+}
+
+
+// The tracks of the disc of release that has exactly trackCount tracks, or
+// none. A release of one disc with as many tracks as the CD is almost
+// certainly that CD; see MusicBrainzSearch::LookupDisc().
+std::vector<TrackInfo>
+TracksOfMatchingDisc(const ReleaseInfo& release, int32 trackCount)
+{
+	std::vector<TrackInfo> result;
+	if (trackCount <= 0)
+		return result;
+
+	for (size_t i = 0; i < release.tracks.size(); i++) {
+		int32 disc = release.tracks[i].disc;
+		size_t onDisc = 0;
+		for (size_t j = 0; j < release.tracks.size(); j++) {
+			if (release.tracks[j].disc == disc)
+				onDisc++;
+		}
+		if (onDisc != (size_t)trackCount)
+			continue;
+
+		for (size_t j = 0; j < release.tracks.size(); j++) {
+			if (release.tracks[j].disc == disc)
+				result.push_back(release.tracks[j]);
+		}
+		return result;
+	}
+
+	return result;
 }
 
 
@@ -588,6 +648,97 @@ MusicBrainzSearch::LookupRelease(const BString& releaseId,
 	}
 
 	result.releases.push_back(ReleaseInfoOf(answer, discId));
+	return result;
+}
+
+
+DiscLookupResult
+MusicBrainzSearch::LookupDisc(const BString& discId, int32 trackCount,
+	const BString& artist, const BString& album, int32 maxCandidates)
+{
+	DiscLookupResult result;
+	if (maxCandidates < 1)
+		maxCandidates = 1;
+
+	status_t discStatus = B_BAD_VALUE;
+	if (discId.Length() > 0) {
+		ReleaseLookupResult byDisc = LookupDiscId(discId);
+		discStatus = byDisc.status;
+		if (byDisc.status == B_OK && !byDisc.releases.empty()) {
+			result.foundByDiscId = true;
+			result.hasTracks = true;
+			result.release = byDisc.releases[0];
+			for (size_t i = 0; i < byDisc.releases.size()
+					&& (int32)result.candidates.size() < maxCandidates; i++) {
+				ReleaseRef ref;
+				ref.id = byDisc.releases[i].id;
+				ref.title = byDisc.releases[i].title;
+				ref.year = byDisc.releases[i].year;
+				result.candidates.push_back(ref);
+			}
+			return result;
+		}
+	}
+
+	// Not a known disc (or none given): look for the album by name.
+	if (artist.Length() == 0) {
+		result.status = discStatus;
+		return result;
+	}
+
+	bool timedOut = false;
+	result.candidates = SearchReleases(artist, album, maxCandidates,
+		&timedOut);
+	if (result.candidates.empty()) {
+		if (timedOut)
+			result.status = B_TIMED_OUT;
+		else if (discStatus == B_TIMED_OUT || discStatus == B_BUSY)
+			result.status = discStatus;
+		else
+			result.status = B_ENTRY_NOT_FOUND;
+		return result;
+	}
+
+	// A search result only has an ID, title and year. Look the first few
+	// up for the album artist and the rest; the first whose track list
+	// fits the disc is the one to use, else the first found stands, with
+	// album-level details only.
+	bool haveRelease = false;
+	for (size_t i = 0; i < result.candidates.size()
+			&& (int32)i < kMaxDiscCandidatesLookedUp; i++) {
+		ReleaseLookupResult looked
+			= LookupRelease(result.candidates[i].id);
+		if (looked.status != B_OK || looked.releases.empty())
+			continue;
+
+		const ReleaseInfo& info = looked.releases[0];
+		std::vector<TrackInfo> tracks = TracksOfMatchingDisc(info, trackCount);
+		if (!tracks.empty()) {
+			result.release = info;
+			result.release.tracks = tracks;
+			result.hasTracks = true;
+			haveRelease = true;
+			// Put it first so cover art is offered for it first.
+			ReleaseRef used = result.candidates[i];
+			result.candidates.erase(result.candidates.begin() + i);
+			result.candidates.insert(result.candidates.begin(), used);
+			break;
+		}
+
+		if (!haveRelease) {
+			result.release = info;
+			result.release.tracks.clear();
+			haveRelease = true;
+		}
+	}
+
+	if (!haveRelease) {
+		result.release.id = result.candidates[0].id;
+		result.release.title = result.candidates[0].title;
+		result.release.year = result.candidates[0].year;
+	}
+
+	result.release.discId = discId;
 	return result;
 }
 

@@ -22,6 +22,8 @@
 #include <String.h>
 #include <SupportDefs.h>
 
+#include "RecordingMatch.h"
+
 
 namespace tagkit {
 
@@ -91,6 +93,39 @@ struct ReleaseLookupResult {
 	// The matching releases in MusicBrainz's order: several when different
 	// pressings share a table of contents.
 	std::vector<ReleaseInfo>	releases;
+};
+
+
+// The answer to MusicBrainzSearch::LookupDisc(): the best release for a CD,
+// found by its disc ID or, failing that, by artist and album.
+struct DiscLookupResult {
+	DiscLookupResult()
+		:
+		status(B_OK),
+		foundByDiscId(false),
+		hasTracks(false)
+	{
+	}
+
+	// B_OK when a release was found; B_ENTRY_NOT_FOUND when nothing
+	// matched; B_TIMED_OUT, B_BUSY, B_BAD_VALUE (nothing to look up by) or
+	// B_ERROR otherwise.
+	status_t					status;
+
+	bool						foundByDiscId;	// by the disc ID itself,
+								// rather than the artist and album search
+
+	// True when release.tracks is the track list of the disc in the drive:
+	// always for a disc ID match, and for a title search match only when
+	// the release has a disc with as many tracks as the CD. When false
+	// only the album-level details of release can be trusted.
+	bool						hasTracks;
+
+	ReleaseInfo					release;		// the best release
+
+	// Releases whose cover art is worth offering, best first (release is
+	// the first). From the disc ID match, or from the title search.
+	std::vector<ReleaseRef>		candidates;
 };
 
 } // namespace tagkit

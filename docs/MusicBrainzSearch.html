@@ -35,6 +35,7 @@ than reported, so a failed search looks like zero results.</p>
 <tr><td><a href="#SearchReleases"><code>static std::vector&lt;ReleaseRef&gt; MusicBrainzSearch::SearchReleases(const BString&amp; artist, const BString&amp; album, int32 maxResults = 25, bool* timedOut = NULL)</code></a><br>Finds releases by artist, for cover art without a song.</td></tr>
 <tr><td><a href="#LookupDiscId"><code>static ReleaseLookupResult MusicBrainzSearch::LookupDiscId(const BString&amp; discId)</code></a><br>Finds the releases with a CD's disc ID, with their track lists.</td></tr>
 <tr><td><a href="#LookupRelease"><code>static ReleaseLookupResult MusicBrainzSearch::LookupRelease(const BString&amp; releaseId, const BString&amp; discId = BString())</code></a><br>Fetches one release by its ID, with its track list.</td></tr>
+<tr><td><a href="#LookupDisc"><code>static DiscLookupResult MusicBrainzSearch::LookupDisc(const BString&amp; discId, int32 trackCount, const BString&amp; artist = BString(), const BString&amp; album = BString(), int32 maxCandidates = 10)</code></a><br>Finds the best release for a CD by its disc ID, falling back to an artist and album search.</td></tr>
 </table>
 <h2>Documentation</h2>
 <div class="member"><h3 id="RecordingQuery"><code>struct RecordingQuery</code></h3>
@@ -133,6 +134,19 @@ a wider net than the releases of one recording.</p>
 <dt><code>discId</code></dt><dd>Optional disc ID to pick the disc by.</dd>
 </dl>
 <h4>Returns</h4><p class="param">A <code>ReleaseLookupResult</code> with one release on success.</p>
+</div>
+<div class="member"><h3 id="LookupDisc"><code>static DiscLookupResult MusicBrainzSearch::LookupDisc(const BString&amp; discId, int32 trackCount, const BString&amp; artist = BString(), const BString&amp; album = BString(), int32 maxCandidates = 10)</code></h3>
+<p class="brief">Finds the best release for a CD by its disc ID, falling back to an artist and album search.</p>
+<p>First tries <code>LookupDiscId()</code>. Many discs are not registered with MusicBrainz, so when that finds nothing and an <code>artist</code> is given, this searches for the artist and album (<code>SearchReleases()</code>) and looks the first few results up (<code>LookupRelease()</code>). A release found that way lends its track list only if it has a disc with exactly <code>trackCount</code> tracks. A deluxe edition with extra tracks, or a box set where no disc fits, is still returned for its album details and cover art, but <code>hasTracks</code> is <code>false</code>, so the wrong recordings are never attached to the CD's tracks. Pass <code>0</code> as <code>trackCount</code> when it is not known, to never use a search result's tracks.</p>
+<p>The several requests this can make are spaced about a second apart, which is what MusicBrainz asks (all of TagKit's MusicBrainz requests are, across threads). Like the other lookups it does network I/O, so call it from a worker thread. Hare uses it for the CD it has loaded.</p>
+<h4>Parameters</h4><dl>
+<dt><code>discId</code></dt><dd>The disc ID, or empty to look by artist and album only.</dd>
+<dt><code>trackCount</code></dt><dd>How many tracks the CD has, or <code>0</code> if unknown.</dd>
+<dt><code>artist</code></dt><dd>For the fallback search; without it there is no fallback.</dd>
+<dt><code>album</code></dt><dd>Optional, narrows the fallback search.</dd>
+<dt><code>maxCandidates</code></dt><dd>The most releases to list in <code>candidates</code> (for cover art).</dd>
+</dl>
+<h4>Returns</h4><p class="param">A <a href="ReleaseInfo.html#DiscLookupResult">DiscLookupResult</a>.</p>
 </div>
 <div id="bottom">TagKit, the reusable tag and cover art library for Haiku music apps. Documentation for the headers in this repository.</div>
 </div>
