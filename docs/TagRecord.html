@@ -24,6 +24,10 @@ fields in memory, <code>modified</code> is set, and
 <p>Unknown numbers are stored as <code>0</code> (track, year) or
 <code>-1</code> (the audio properties); unknown text is the empty
 string.</p>
+<h2>Structures</h2>
+<table>
+<tr><td><a href="#MusicBrainzIds"><code>struct MusicBrainzIds</code></a><br>MusicBrainz identifiers to store in a file next to its ordinary tags.</td></tr>
+</table>
 <h2>Enumerations</h2>
 <table>
 <tr><td><a href="#audio_format"><code>enum audio_format</code></a><br>The audio file formats TagKit handles.</td></tr>
@@ -59,12 +63,26 @@ string.</p>
 <tr><td><a href="#writable"><code>bool writable</code></a><br>The file's tags can be saved.</td></tr>
 <tr><td><a href="#newCoverArt"><code>std::shared_ptr&lt;const CoverArtImage&gt; newCoverArt</code></a><br>Cover art to write into the file on the next save, or <code>NULL</code> to leave the file's art alone.</td></tr>
 <tr><td><a href="#removeCoverArt"><code>bool removeCoverArt</code></a><br>The user removed the file's cover art; the next save deletes the embedded pictures.</td></tr>
+<tr><td><a href="#musicBrainz"><code>MusicBrainzIds musicBrainz</code></a><br>MusicBrainz identifiers to write with the next save; empty ones are left alone.</td></tr>
 </table>
 <h2>Member Functions</h2>
 <table>
 <tr><td><a href="#IsUntagged"><code>bool IsUntagged() const</code></a><br>Whether neither artist nor title could be read from the file.</td></tr>
 </table>
 <h2>Documentation</h2>
+<div class="member"><h3 id="MusicBrainzIds"><code>struct MusicBrainzIds</code></h3>
+<p class="brief">MusicBrainz identifiers to store in a file next to its ordinary tags.</p>
+<p>These are written, not read: an empty id leaves whatever the file already holds for it alone, so a record read from a file (which has none of them set) never clears or changes them when it is saved again. <a href="TagWriter.html#write_tags">write_tags()</a> stores them under the tag names MusicBrainz Picard uses.</p>
+<table><tr><th>Field</th><th>Tag written</th></tr>
+<tr><td><code>BString discId</code></td><td><code>MUSICBRAINZ_DISCID</code></td></tr>
+<tr><td><code>BString releaseId</code></td><td><code>MUSICBRAINZ_ALBUMID</code> (the release)</td></tr>
+<tr><td><code>BString releaseGroupId</code></td><td><code>MUSICBRAINZ_RELEASEGROUPID</code></td></tr>
+<tr><td><code>BString artistId</code></td><td><code>MUSICBRAINZ_ARTISTID</code></td></tr>
+<tr><td><code>BString recordingId</code></td><td><code>MUSICBRAINZ_TRACKID</code> (the recording)</td></tr>
+</table>
+<h4>Member Functions</h4>
+<p><code>bool IsEmpty() const</code> &mdash; <code>true</code> when all five ids are empty.</p>
+</div>
 <div class="member"><h3 id="audio_format"><code>enum audio_format</code></h3>
 <p class="brief">The audio file formats TagKit handles.</p>
 <table><tr><th>Constant</th><th>Meaning</th></tr>
@@ -222,6 +240,10 @@ untagged file, not a reliable parse.</p>
 <div class="member"><h3 id="removeCoverArt"><code>bool removeCoverArt</code></h3>
 <p class="brief">The user removed the file's cover art; the next save deletes the embedded pictures.</p>
 <p>Never set together with <code>newCoverArt</code>.</p>
+</div>
+<div class="member"><h3 id="musicBrainz"><code>MusicBrainzIds musicBrainz</code></h3>
+<p class="brief">MusicBrainz identifiers to write with the next save; empty ones are left alone.</p>
+<p>Not filled in by <code>read_tags()</code>. <a href="TagView.html">TagView</a> sets <code>recordingId</code> when a MusicBrainz match is applied.</p>
 </div>
 <div class="member"><h3 id="IsUntagged"><code>bool IsUntagged() const</code></h3>
 <p class="brief">Whether neither artist nor title could be read from the file.</p>

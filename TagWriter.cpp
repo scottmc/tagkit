@@ -9,6 +9,8 @@
 #include "TagWriter.h"
 
 #include <taglib/fileref.h>
+#include <taglib/tpropertymap.h>
+#include <taglib/tstringlist.h>
 #include <taglib/tag.h>
 #include <taglib/tbytevector.h>
 #include <taglib/tlist.h>
@@ -61,6 +63,17 @@ struct TagFields {
 			&& year == other.year;
 	}
 };
+
+// Stores one MusicBrainz id in properties under key, when there is one.
+static void
+set_musicbrainz_id(TagLib::PropertyMap& properties, const char* key,
+	const BString& id)
+{
+	if (!id.IsEmpty()) {
+		properties.replace(TagLib::String(key),
+			TagLib::StringList(to_taglib_string(id)));
+	}
+}
 
 }	// namespace
 
@@ -135,6 +148,25 @@ write_tags(const TagRecord& record, BString* errorMessage)
 				*errorMessage = "this file type can't hold cover art";
 			return false;
 		}
+	}
+
+	// MusicBrainz identifiers go in under the names MusicBrainz Picard uses
+	// (an ID3v2 TXXX frame for MP3, a same-named comment for Ogg and FLAC),
+	// so Picard and other MusicBrainz-aware tools recognize the file. Only
+	// the ids the record holds are touched.
+	if (!record.musicBrainz.IsEmpty() && file.file() != NULL) {
+		TagLib::PropertyMap properties = file.file()->properties();
+		set_musicbrainz_id(properties, "MUSICBRAINZ_DISCID",
+			record.musicBrainz.discId);
+		set_musicbrainz_id(properties, "MUSICBRAINZ_ALBUMID",
+			record.musicBrainz.releaseId);
+		set_musicbrainz_id(properties, "MUSICBRAINZ_RELEASEGROUPID",
+			record.musicBrainz.releaseGroupId);
+		set_musicbrainz_id(properties, "MUSICBRAINZ_ARTISTID",
+			record.musicBrainz.artistId);
+		set_musicbrainz_id(properties, "MUSICBRAINZ_TRACKID",
+			record.musicBrainz.recordingId);
+		file.file()->setProperties(properties);
 	}
 
 	if (record.removeCoverArt && record.newCoverArt == NULL) {

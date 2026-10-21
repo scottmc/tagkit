@@ -224,6 +224,15 @@ format_label(audio_format format)
 }
 
 
+bool
+MusicBrainzIds::IsEmpty() const
+{
+	return discId.IsEmpty() && releaseId.IsEmpty()
+		&& releaseGroupId.IsEmpty() && artistId.IsEmpty()
+		&& recordingId.IsEmpty();
+}
+
+
 TagRecord::TagRecord()
 	:
 	format(AUDIO_FORMAT_UNKNOWN),

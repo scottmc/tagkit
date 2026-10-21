@@ -75,6 +75,22 @@ audio_format format_from_file(const BString& path);
 const char* format_label(audio_format format);
 
 
+// MusicBrainz identifiers to store in a file next to its ordinary tags.
+// They are written, not read: an empty id leaves whatever the file already
+// holds for it alone, so a record read from a file (which has none of these
+// set) never clears or changes them when it is saved again. See
+// write_tags() for the tag names used.
+struct MusicBrainzIds {
+	BString		discId;			// MUSICBRAINZ_DISCID
+	BString		releaseId;		// MUSICBRAINZ_ALBUMID (the release)
+	BString		releaseGroupId;	// MUSICBRAINZ_RELEASEGROUPID
+	BString		artistId;		// MUSICBRAINZ_ARTISTID
+	BString		recordingId;	// MUSICBRAINZ_TRACKID (the recording)
+
+	bool IsEmpty() const;
+};
+
+
 struct TagRecord {
 	TagRecord();
 
@@ -112,6 +128,10 @@ struct TagRecord {
 	// True when the user removed the file's cover art; the next save then
 	// deletes the embedded pictures. Never set together with newCoverArt.
 	bool		removeCoverArt;
+
+	// MusicBrainz identifiers to write with the next save; empty ones are
+	// left alone. Not filled in by the reader.
+	MusicBrainzIds	musicBrainz;
 
 	// True when neither artist nor title could be read from the file's
 	// tags. This is the trigger for offering a MusicBrainz lookup based
