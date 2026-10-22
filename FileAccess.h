@@ -8,7 +8,7 @@
  */
 // FileAccess.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Whether a file's tags can be saved, and if not, why: the file is gone, is
 // not a plain file, is on a read-only volume (a CD, a mounted image), or is
 // not writable by the user.

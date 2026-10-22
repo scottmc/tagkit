@@ -8,7 +8,7 @@
  */
 // ReleaseInfo.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // One MusicBrainz release as a lookup returns it: the album's details and the
 // track list of the disc (medium) that was asked about. Like RecordingMatch
 // it has no dependency on any JSON or web code, so callers can hold or show

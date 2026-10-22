@@ -8,7 +8,7 @@
  */
 // OptionalIntegerColumn.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A right-aligned numeric column for values where 0 (or less) means
 // "unknown" -- track number, year -- so unknown shows as a blank cell
 // rather than a misleading "0". Sorts numerically (blank first), unlike a

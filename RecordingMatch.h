@@ -8,7 +8,7 @@
  */
 // RecordingMatch.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // One MusicBrainz recording (track) search result. Deliberately has no
 // dependency on any JSON or web code, so callers (and other apps)
 // don't need to include/link against it just to hold or display a

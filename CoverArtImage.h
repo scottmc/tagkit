@@ -8,7 +8,7 @@
  */
 // CoverArtImage.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // One cover art image: the compressed bytes exactly as the Cover Art
 // Archive served them (JPEG/PNG/GIF), plus which MusicBrainz release it
 // belongs to. Kept as raw bytes so the very same image can be shown (decode

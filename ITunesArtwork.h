@@ -8,7 +8,7 @@
  */
 // ITunesArtwork.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Album cover lookup through Apple's public iTunes Search API
 // (https://itunes.apple.com/search), meant as a fallback for when the Cover
 // Art Archive has nothing (or nothing that can be fetched) for a release.

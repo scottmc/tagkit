@@ -8,7 +8,7 @@
  */
 // RecordingMatchView.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A BColumnListView preconfigured to show MusicBrainz recording search
 // results (artist/title/album/track/year/duration, in the relevance order
 // MusicBrainz itself returned them) for the user to pick from. Sibling

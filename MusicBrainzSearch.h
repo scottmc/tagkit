@@ -8,7 +8,7 @@
  */
 // MusicBrainzSearch.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A synchronous MusicBrainz recording (track) search -- by any mix of
 // artist, title, album, year, track number and comment, a page at a time --
 // and a release search by artist + album. Both ask MusicBrainz's web service

@@ -8,7 +8,7 @@
  */
 // BatchWriter.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Saves the tags of many files in one go, telling the caller after each file
 // so a program can show progress ("Saved 3 of 12") and stop early. It is
 // write_tags() in a loop with a report, so one bad file never stops the rest.

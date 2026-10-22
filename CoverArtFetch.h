@@ -8,7 +8,7 @@
  */
 // CoverArtFetch.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Looks up front cover art for a set of MusicBrainz releases on the Cover
 // Art Archive. The covers are downloaded with http_get() (see HttpFetch.h),
 // so every request has a time limit.

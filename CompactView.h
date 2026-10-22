@@ -8,7 +8,7 @@
  */
 // CompactView.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A compact alternative to the column list for showing one file: an
 // outlined rectangle holding two squares side by side. The left square
 // lists the tag fields, one per row, each with its name in bold followed by

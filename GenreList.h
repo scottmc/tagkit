@@ -8,7 +8,7 @@
  */
 // GenreList.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // The standard music genre names (the ID3v1 list plus the Winamp
 // additions), taken from Hare's GenreList (Hare Team, MIT License) so both
 // apps offer the same choices -- spellings included. Meant for filling a

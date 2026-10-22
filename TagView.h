@@ -8,7 +8,7 @@
  */
 // TagView.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 //
 // TagView is a BColumnListView pre-configured to display tagkit::TagRecord
 // rows: file name, artist, title, album, track, year, genre, duration and

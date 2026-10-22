@@ -8,7 +8,7 @@
  */
 // CoverArtDragDrop.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Drag and drop for a view that shows one cover image, the way ShowImage
 // does it (Be's "negotiated" drag and drop):
 //

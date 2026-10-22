@@ -8,7 +8,7 @@
  */
 // TagRecord.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // TagRecord is a plain data holder for the tag fields we know how to show
 // and edit. It intentionally has no dependency on any particular tagging
 // library (TagLib, MusicBrainz, etc.) so it can be passed around freely

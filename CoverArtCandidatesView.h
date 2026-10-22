@@ -8,7 +8,7 @@
  */
 // CoverArtCandidatesView.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Adapted from Hare's CoverArtCandidatesView: a horizontally scrollable
 // row of cover art thumbnails to choose between. Clicking a thumbnail
 // marks it as selected with a bold border; the selection starts on the

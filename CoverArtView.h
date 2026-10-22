@@ -8,7 +8,7 @@
  */
 // CoverArtView.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A small square view that shows one cover art bitmap, scaled to fit with
 // its aspect ratio kept, or a plain "No cover art" placeholder when there
 // isn't one. A simpler cousin of Hare's CoverArtView (no CD button), meant

@@ -8,7 +8,7 @@
  */
 // JsonValue.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // A small JSON reader, just enough for the answers of web services such as
 // MusicBrainz. Reading never fails halfway: a missing key or an out of
 // range index gives back a "null" value that reads as empty / 0 / false,

@@ -8,7 +8,7 @@
  */
 // TagReader.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Reads an audio file's tags and audio properties with TagLib into a
 // TagRecord. TagLib's own types stay private to TagReader.cpp, so callers
 // (and other apps) only need TagRecord and don't have to include or

@@ -227,7 +227,7 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 	BString error;
 	status_t searchStatus = http_get(url, response, &error);
 	if (searchStatus != B_OK) {
-		fprintf(stderr, "TagView: iTunes search failed: %s\n",
+		fprintf(stderr, "TagKit: iTunes search failed: %s\n",
 			error.String());
 		if (searchStatus == B_TIMED_OUT && timedOut != NULL)
 			*timedOut = true;
@@ -239,7 +239,7 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 
 	std::vector<Candidate> candidates;
 	ParseCandidates(json, artist, album, candidates);
-	fprintf(stderr, "TagView: iTunes found %d candidate albums for \"%s\"\n",
+	fprintf(stderr, "TagKit: iTunes found %d candidate albums for \"%s\"\n",
 		(int)candidates.size(), term.String());
 
 	// Albums whose title matches the one asked for go first.
@@ -262,7 +262,7 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 		status_t artworkStatus = http_get(LargeArtworkUrl(candidate.artworkUrl),
 			data, &artworkError);
 		if (artworkStatus != B_OK || data.empty()) {
-			fprintf(stderr, "TagView: no iTunes artwork for \"%s\": %s\n",
+			fprintf(stderr, "TagKit: no iTunes artwork for \"%s\": %s\n",
 				candidate.title.String(), artworkError.String());
 			if (artworkStatus == B_TIMED_OUT) {
 				// The network is most likely down: don't wait on the rest.
@@ -282,7 +282,7 @@ fetch_itunes_cover_art(const BString& artist, const BString& album,
 		if (image.mimeType.IsEmpty())
 			continue;
 
-		fprintf(stderr, "TagView: iTunes cover for \"%s\": %s, %d bytes\n",
+		fprintf(stderr, "TagKit: iTunes cover for \"%s\": %s, %d bytes\n",
 			candidate.title.String(), image.mimeType.String(),
 			(int)image.data.size());
 		count++;

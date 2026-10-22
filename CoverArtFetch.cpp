@@ -40,7 +40,7 @@ fetch_cover_art(const std::vector<ReleaseRef>& releases, int32 maxImages,
 		BString error;
 		status_t status = http_get(url, data, &error);
 		if (status == B_TIMED_OUT) {
-			fprintf(stderr, "TagView: cover art request for release %s (%s) "
+			fprintf(stderr, "TagKit: cover art request for release %s (%s) "
 				"timed out; giving up on the rest\n", release.id.String(),
 				release.title.String());
 			if (timedOut != NULL)
@@ -49,13 +49,13 @@ fetch_cover_art(const std::vector<ReleaseRef>& releases, int32 maxImages,
 		}
 		if (status != B_OK) {
 			// Most often just "no cover art for this release" (a 404).
-			fprintf(stderr, "TagView: no cover art for release %s (%s): %s\n",
+			fprintf(stderr, "TagKit: no cover art for release %s (%s): %s\n",
 				release.id.String(), release.title.String(), error.String());
 			continue;
 		}
 
 		if (data.empty()) {
-			fprintf(stderr, "TagView: empty cover art for release %s (%s)\n",
+			fprintf(stderr, "TagKit: empty cover art for release %s (%s)\n",
 				release.id.String(), release.title.String());
 			continue;
 		}
@@ -72,7 +72,7 @@ fetch_cover_art(const std::vector<ReleaseRef>& releases, int32 maxImages,
 		if (image.mimeType.IsEmpty())
 			continue;
 
-		fprintf(stderr, "TagView: cover art for release %s (%s): %s, %d bytes\n",
+		fprintf(stderr, "TagKit: cover art for release %s (%s): %s, %d bytes\n",
 			release.id.String(), release.title.String(),
 			image.mimeType.String(), (int)image.data.size());
 		count++;

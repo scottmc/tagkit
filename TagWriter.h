@@ -8,7 +8,7 @@
  */
 // TagWriter.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // The counterpart to TagReader: writes a TagRecord's tag fields back into
 // the audio file with TagLib. TagLib's types stay private to
 // TagWriter.cpp.

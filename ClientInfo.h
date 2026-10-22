@@ -8,7 +8,7 @@
  */
 // ClientInfo.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // MusicBrainz, the Cover Art Archive and iTunes all ask API clients to say
 // who they are (MusicBrainz will throttle or block anonymous ones), so tagkit
 // identifies itself with the name and version of the program using it. The

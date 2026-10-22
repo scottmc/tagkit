@@ -8,7 +8,7 @@
  */
 // TagField.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Names the tag fields a user can edit by hand, with helpers to read one
 // out of a TagRecord as text and to put edited text back in (checking
 // that numbers are numbers). Shared by the column list, the compact view

@@ -8,7 +8,7 @@
  */
 // NetworkTimeout.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // The time limit TagKit's web requests (HttpFetch, which the MusicBrainz,
 // Cover Art Archive and iTunes lookups all use) work under.
 

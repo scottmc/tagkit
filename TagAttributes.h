@@ -8,7 +8,7 @@
  */
 // TagAttributes.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // Haiku keeps a copy of a music file's main tags as file attributes (the
 // columns Tracker shows, and what queries search): Audio:Artist,
 // Audio:Album, Media:Title, Audio:Track, Media:Year, Media:Genre and

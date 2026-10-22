@@ -178,7 +178,7 @@ load_cover_art_data(std::vector<unsigned char>& data, CoverArtImage& image,
 	BBitmap* bitmap = decode_cover_art(original);
 	if (bitmap == NULL) {
 		if (errorMessage != NULL)
-			*errorMessage = "that isn't an image format TagView can read";
+			*errorMessage = "that isn't an image format TagKit can read";
 		return B_NOT_SUPPORTED;
 	}
 

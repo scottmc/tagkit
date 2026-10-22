@@ -8,7 +8,7 @@
  */
 // HttpFetch.h
 //
-// Part of "tagkit" -- the reusable pieces of TagView.
+// Part of "tagkit" -- shared tagging code, first written for TagView.
 // One blocking HTTP(S) GET. Haiku's public network kit has no HTTP client
 // (the BHttpRequest headers are private), so this runs the curl that ships
 // with Haiku, which follows redirects and uses the system's trusted
