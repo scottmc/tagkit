@@ -83,6 +83,18 @@ BString translator_output_mime_type(int32 translator, uint32 type);
 status_t export_cover_art(const CoverArtImage& image, const char* path,
 	int32 translator, uint32 type, BString* errorMessage = NULL);
 
+// Saves the image as "cover.<ext>" in directory (the usual name for an album's
+// picture, which other players and file managers look for), in the format
+// given by mimeType ("image/png"), or as it is if mimeType is NULL or empty.
+// If the image can't be converted to that format it is saved as it is
+// instead. A cover file that's already there is left alone (B_FILE_EXISTS)
+// unless overwrite is true, so saving it once per track of an album writes
+// it just once. The file's MIME type is set. writtenPath, if given, is set to
+// the file's path when one was written.
+status_t write_cover_file(const CoverArtImage& image, const char* directory,
+	const char* mimeType = NULL, bool overwrite = false,
+	BString* writtenPath = NULL, BString* errorMessage = NULL);
+
 // Decodes the image into a bitmap with Haiku's Translation Kit. Returns
 // NULL if it can't be decoded. The caller owns the bitmap.
 BBitmap* decode_cover_art(const CoverArtImage& image);

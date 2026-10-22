@@ -15,8 +15,10 @@
 #include <BitmapStream.h>
 #include <DataIO.h>
 #include <Debug.h>
+#include <Entry.h>
 #include <File.h>
 #include <NodeInfo.h>
+#include <Path.h>
 #include <TranslationDefs.h>
 #include <TranslationUtils.h>
 #include <TranslatorFormats.h>
@@ -45,6 +47,81 @@ detect_image_mime_type(const unsigned char* data, size_t size)
 
 
 // Same approach as Hare's MusicBrainzLookup DecodeImage().
+status_t
+write_cover_file(const CoverArtImage& image, const char* directory,
+	const char* mimeType, bool overwrite, BString* writtenPath,
+	BString* errorMessage)
+{
+	if (image.data.empty() || directory == NULL) {
+		if (errorMessage != NULL)
+			*errorMessage = "there is no cover art to save";
+		return B_BAD_VALUE;
+	}
+
+	// Once per track of an album is the usual use, so look for the file
+	// before going to the trouble of converting the image for it.
+	if (!overwrite && mimeType != NULL && mimeType[0] != '\0') {
+		BString wanted = image_extension_for_mime_type(mimeType);
+		if (!wanted.IsEmpty()) {
+			BString wantedName("cover.");
+			wantedName << wanted;
+			BPath wantedPath(directory, wantedName.String());
+			if (wantedPath.InitCheck() == B_OK
+					&& BEntry(wantedPath.Path()).Exists()) {
+				return B_FILE_EXISTS;
+			}
+		}
+	}
+
+	// In the format asked for if that works, else the image's own.
+	std::vector<unsigned char> bytes;
+	BString mime = image.mimeType;
+	if (mimeType != NULL && mimeType[0] != '\0'
+			&& encode_cover_art(image, mimeType, bytes) == B_OK
+			&& !bytes.empty()) {
+		mime = mimeType;
+	} else {
+		bytes = image.data;
+	}
+
+	BString extension = image_extension_for_mime_type(mime.String());
+	if (extension.IsEmpty())
+		extension = "jpg";
+	BString fileName("cover.");
+	fileName << extension;
+
+	BPath path(directory, fileName.String());
+	if (path.InitCheck() != B_OK) {
+		if (errorMessage != NULL)
+			*errorMessage = "not a usable folder";
+		return B_BAD_VALUE;
+	}
+
+	if (!overwrite && BEntry(path.Path()).Exists())
+		return B_FILE_EXISTS;
+
+	BFile file(path.Path(), B_WRITE_ONLY | B_CREATE_FILE | B_ERASE_FILE);
+	status_t status = file.InitCheck();
+	if (status != B_OK) {
+		if (errorMessage != NULL)
+			*errorMessage = "couldn't create the file";
+		return status;
+	}
+	if (file.Write(&bytes[0], bytes.size()) != (ssize_t)bytes.size()) {
+		if (errorMessage != NULL)
+			*errorMessage = "couldn't write the file";
+		return B_IO_ERROR;
+	}
+
+	if (!mime.IsEmpty()) {
+		BNodeInfo info(&file);
+		info.SetType(mime.String());
+	}
+	if (writtenPath != NULL)
+		*writtenPath = path.Path();
+	return B_OK;
+}
+
 BBitmap*
 decode_cover_art(const CoverArtImage& image)
 {

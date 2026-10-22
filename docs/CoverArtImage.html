@@ -29,6 +29,7 @@ loaded. The conversion and display functions use the Translation Kit.</p>
 <tr><td><a href="#load_cover_art_data"><code>status_t load_cover_art_data(std::vector&lt;unsigned char&gt;&amp; data, CoverArtImage&amp; image, BString* errorMessage = NULL)</code></a><br>The same, from image bytes already in memory (a dropped image, say).</td></tr>
 <tr><td><a href="#encode_cover_art"><code>status_t encode_cover_art(const CoverArtImage&amp; image, const char* mimeType, std::vector&lt;unsigned char&gt;&amp; out)</code></a><br>Image bytes in a given MIME type.</td></tr>
 <tr><td><a href="#translator_output_mime_type"><code>BString translator_output_mime_type(int32 translator, uint32 type)</code></a><br>What a Translation Kit translator writes for a type.</td></tr>
+<tr><td><a href="#write_cover_file"><code>status_t write_cover_file(const CoverArtImage&amp; image, const char* directory, const char* mimeType = NULL, bool overwrite = false, BString* writtenPath = NULL, BString* errorMessage = NULL)</code></a><br>Saves the image as cover.&lt;ext&gt; in a folder.</td></tr>
 <tr><td><a href="#export_cover_art"><code>status_t export_cover_art(const CoverArtImage&amp; image, const char* path, int32 translator, uint32 type, BString* errorMessage = NULL)</code></a><br>Writes an image to a file in a chosen format.</td></tr>
 <tr><td><a href="#decode_cover_art"><code>BBitmap* decode_cover_art(const CoverArtImage&amp; image)</code></a><br>Decodes an image into a bitmap with the Translation Kit.</td></tr>
 </table>
@@ -101,6 +102,10 @@ anything else (BMP, TIFF, WebP, ...) is converted to PNG.</p>
 <dt><code>type</code></dt><dd>The output type, as chosen from <code>BTranslationUtils::AddTranslationItems()</code>.</dd>
 </dl>
 <h4>Returns</h4><p class="param">Its MIME type (such as <code>"image/png"</code>), or an empty string if unknown.</p>
+</div>
+<div class="member"><h3 id="write_cover_file"><code>status_t write_cover_file(const CoverArtImage&amp; image, const char* directory, const char* mimeType = NULL, bool overwrite = false, BString* writtenPath = NULL, BString* errorMessage = NULL)</code></h3>
+<p class="brief">Saves the image as <code>cover.&lt;ext&gt;</code> in a folder.</p>
+<p>The format is <code>mimeType</code> (for example <code>image/png</code>), or the image's own when that is <code>NULL</code> or empty; if the image can't be converted it is saved as it is. A cover file already there is left alone (<code>B_FILE_EXISTS</code>) unless <code>overwrite</code> is true, so calling this once per track of an album writes it only once. The file's MIME type is set, and <code>writtenPath</code> is set to its path when a file was written.</p>
 </div>
 <div class="member"><h3 id="export_cover_art"><code>status_t export_cover_art(const CoverArtImage&amp; image, const char* path, int32 translator, uint32 type, BString* errorMessage = NULL)</code></h3>
 <p class="brief">Writes an image to a file in a chosen format.</p>
