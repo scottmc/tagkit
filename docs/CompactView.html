@@ -36,6 +36,7 @@ the window, with details added; the window decides what to do.</p>
 <tr><td><a href="#SetInfoWidthRatio"><code>void SetInfoWidthRatio(float ratio)</code></a><br>Makes the tag square wider than the cover art.</td></tr>
 <tr><td><a href="#InfoWidthRatio"><code>float InfoWidthRatio() const</code></a><br>The current ratio.</td></tr>
 <tr><td><a href="#SetMinimumViewSize"><code>void SetMinimumViewSize(float width, float height)</code></a><br>Sets the smallest size the view asks its layout for.</td></tr>
+<tr><td><a href="#SetMinimumWidthFromHeight"><code>void SetMinimumWidthFromHeight(bool enable)</code></a><br>Lets the minimum width follow from the minimum height.</td></tr>
 <tr><td><a href="#SetCoverBitmap"><code>void SetCoverBitmap(BBitmap* bitmap)</code></a><br>Sets the cover art shown.</td></tr>
 <tr><td><a href="#SetTextScale"><code>void SetTextScale(float scale)</code></a><br>Makes the text larger or smaller than its automatic size.</td></tr>
 <tr><td><a href="#TextScale"><code>float TextScale() const</code></a><br>The current text scale.</td></tr>
@@ -83,6 +84,10 @@ the window, with details added; the window decides what to do.</p>
 <div class="member"><h3 id="SetMinimumViewSize"><code>void SetMinimumViewSize(float width, float height)</code></h3>
 <p class="brief">Sets the smallest size the view asks its layout for.</p>
 <p>The default is 300 &times; 150; the least accepted is 100 &times; 60. The text shrinks to fit, down to a lower limit, so very small sizes cut values off.</p>
+</div>
+<div class="member"><h3 id="SetMinimumWidthFromHeight"><code>void SetMinimumWidthFromHeight(bool enable)</code></h3>
+<p class="brief">Lets the minimum width follow from the minimum height.</p>
+<p>When on, the view can be as narrow as the two squares at the minimum height need, so they are as far from the sides as from the top, and the width given to <code>SetMinimumViewSize()</code> is not used. Off by default.</p>
 </div>
 <div class="member"><h3 id="SetCoverBitmap"><code>void SetCoverBitmap(BBitmap* bitmap)</code></h3>
 <p class="brief">Sets the cover art shown.</p>

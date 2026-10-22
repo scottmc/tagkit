@@ -612,7 +612,8 @@ CompactView::CompactView(const char* name)
 	fEditMessage(NULL),
 	fCoverContextMessage(NULL),
 	fTextScale(1.0f),
-	fInfoWidthRatio(1.0f)
+	fInfoWidthRatio(1.0f),
+	fMinimumWidthFromHeight(false)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
 
@@ -711,6 +712,7 @@ CompactView::SetInfoWidthRatio(float ratio)
 		return;
 
 	fInfoWidthRatio = ratio;
+	InvalidateLayout();
 	_LayoutSquares();
 }
 
@@ -849,6 +851,37 @@ CompactView::SetEmptyButtonVisible(bool visible)
 {
 	fArtSquare->Button().SetVisible(visible);
 	fArtSquare->Invalidate();
+}
+
+
+void
+CompactView::SetMinimumWidthFromHeight(bool enable)
+{
+	if (enable == fMinimumWidthFromHeight)
+		return;
+
+	fMinimumWidthFromHeight = enable;
+	InvalidateLayout();
+}
+
+
+BSize
+CompactView::MinSize()
+{
+	BSize size = BView::MinSize();
+	if (!fMinimumWidthFromHeight)
+		return size;
+
+	// The squares at the minimum height: as tall as fits between the
+	// outline's padding and above the file name, and as wide as their
+	// ratio makes them.
+	float side = size.height - 2.0f * (kOuterMargin + kOuterPadding)
+		- _FileNameStripHeight();
+	if (side < 1.0f)
+		side = 1.0f;
+	size.width = ceilf(2.0f * (kOuterMargin + kOuterPadding)
+		+ side * (1.0f + fInfoWidthRatio) + kSquareGap);
+	return size;
 }
 
 

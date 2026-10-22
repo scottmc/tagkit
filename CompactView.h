@@ -43,6 +43,7 @@ public:
 	virtual						~CompactView();
 
 	virtual	void				AttachedToWindow();
+	virtual	BSize				MinSize();
 	virtual	void				FrameResized(float width, float height);
 	virtual	void				Draw(BRect updateRect);
 
@@ -78,6 +79,13 @@ public:
 	// 300 x 150; the least accepted is 100 x 60. Text shrinks to fit, down
 	// to a lower limit, so very small sizes cut values off.
 			void				SetMinimumViewSize(float width, float height);
+
+			// On: the minimum width is just what the squares need at the
+			// minimum height (the width given to SetMinimumViewSize() is
+			// then not used), so the view can be as narrow as it is low,
+			// with the squares as far from the sides as from the top.
+			// Off (the default): the width given is the minimum.
+			void				SetMinimumWidthFromHeight(bool enable);
 
 	// Takes ownership of bitmap (NULL shows the blue gradient), freeing
 	// whatever was shown before.
@@ -137,6 +145,7 @@ private:
 			BString				fFileName;
 			float				fTextScale;
 			float				fInfoWidthRatio;
+			bool				fMinimumWidthFromHeight;
 };
 
 } // namespace tagkit
